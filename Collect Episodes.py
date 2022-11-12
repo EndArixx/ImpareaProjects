@@ -34,6 +34,7 @@ def copy_stuff(files):
 		image_dir = image_path_split[-2]
 		image_name = image_path_split[-1]
 		image_destination = 'ERROR'
+		trim_headers(image_path)
 		if "{}{}".format(image_dir,file_type) == image_name:
 			print('copying:{}'.format(image_name))
 			image_destination = os.path.join(parent_dir, image_name)
@@ -42,7 +43,6 @@ def copy_stuff(files):
 			image_destination = os.path.join(parent_dir, '(U)', image_name )
 		if image_destination is not 'ERROR':
 			shutil.copy(image_path,image_destination)
-			trim_headers(image_destination)
 	
 
 			
