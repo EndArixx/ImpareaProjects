@@ -15,6 +15,10 @@ for remove_path in remove_files:
 	print('deleting:{}'.format(remove_path.split('\\')[-1]))
 	os.remove(remove_path)
 
+def if_not_exist_make_folder(path):
+	if not os.path.exists(path):
+		os.mkdir(path)
+
 def trim_headers(trim_image_Path):
 	trim_image = Image.open(trim_image_Path)
 	trim_image_width, trim_image_height = trim_image.size
@@ -29,6 +33,7 @@ def trim_headers(trim_image_Path):
 
 #copy over files
 def copy_stuff(files):
+	if_not_exist_make_folder('(U)')
 	for image_path in files:
 		image_path_split = image_path.split('\\')
 		image_dir = image_path_split[-2]
