@@ -23,11 +23,11 @@ def Get_IO():
 def Get_Word_With(letter, listofwords):
     return choice([x for x in listofwords if x.lower().startswith(letter)])
 def Get_Flav(letter): 
-    return  Get_Word_With(letter,flavors).split(',')[0]
+    return  Get_Word_With(letter,flavors).split(',')[0].capitalize()
 def Get_Adj(letter): 
-    return  Get_Word_With(letter, adjectives)
+    return  Get_Word_With(letter, adjectives).capitalize()
 def Get_Noun(letter): 
-    return  Get_Word_With(letter, nouns)
+    return  Get_Word_With(letter, nouns).capitalize()
 def Get_Color(): 
     return  choice(colors)
 
@@ -51,3 +51,4 @@ def Generate_An_Imp():
 
 imp = Generate_An_Imp()
 print(imp)
+input("Press any key to close.")
