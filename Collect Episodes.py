@@ -16,6 +16,30 @@ pages_dir = os.path.abspath(os.path.join(parent_dir, '..\\Pages\\'))
 pages_files = [y for x in os.walk(pages_dir) for y in glob(os.path.join(x[0], '*{}'.format(file_type)))]
 remove_files = [y for x in os.walk(parent_dir) for y in glob(os.path.join(x[0], '*{}'.format(file_type)))]
 
+class coordinate:
+	def __init__(self,left, top, right, bottom):
+		self.left = left
+		self.top = top
+		self.right = right
+		self.bottom = bottom
+
+
+exceptions = {
+	#coordinate(left, top, right, bottom)
+	"004P2": coordinate(0,1200,1600,2800),
+	"004P3": coordinate(0,2200,1600,3800),
+	"004P4": coordinate(0,3200,1600,4800),
+	"007P1": coordinate(0,0,1600,1600),
+	"007P2": coordinate(0,1000,1600,2600),
+	"007P3": coordinate(0,2200,1600,3800),
+	"007P4": coordinate(0,3200,1600,4800),
+	"009P1": coordinate(0,0,1600,1600),
+	"009P3": coordinate(0,2200,1600,3800),
+	"009P4": coordinate(0,3200,1600,4800),
+	"012P2": coordinate(0,1000,1600,2600),
+	"012P3": coordinate(0,2200,1600,3800),
+}
+
 #delete existing
 for remove_path in remove_files:
 	print('deleting:{}'.format(remove_path.split('\\')[-1]))
@@ -69,12 +93,18 @@ def Slice_for_Instagram(instafiles, recreate = False):
 			gap = (x-y)/2
 			panels = []
 			for i in range(height//y):
+				name = f"{image_name[0:3]}P{i+1}"
 				file = os.path.join(parent_dir, insta_folder_name, "{0}P{1}.png".format(image_name[0:3], i+1))
-				if not os.path.exists(file) or recreate:
+				if name in exceptions.keys():
+					ex = exceptions[name]
+					panel = image.crop((ex.left, ex.top, ex.right, ex.bottom))
+					print(f'Saving CUSTOM:{file}')
+					panel.save(file)
+				elif not os.path.exists(file) or recreate:
 					#crop(left, top, right, bottom)
 					panel = image.crop((0,   i*y,  x, (i+1)*y))
 					panel = panel.crop((0,   -gap, x, y+gap))
-					print('Saving:{}'.format(file))
+					print(f'Saving:{file}')
 					panel.save(file)
 
 def Execute():
