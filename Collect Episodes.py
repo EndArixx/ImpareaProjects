@@ -128,10 +128,31 @@ def Slice_for_Instagram(instafiles, recreate = False):
 					print(f'Saving:{file}')
 					panel.save(file)
 
+def Slice_for_Instagram_V2(instafiles, recreate = False):
+	if_not_exist_make_folder(insta_folder_name)
+	for image_path in instafiles:
+		image_path_split = image_path.split('\\')
+		image_dir = image_path_split[-2]
+		image_name = image_path_split[-1]
+		image = Image.open(image_path)
+		if "{}{}".format(image_dir,file_type) == image_name:
+			x, height = image.size
+			y = 2400
+			gap = (x-y)/2
+			panels = []
+			for i in range(height//y):
+				name = f"{image_name[0:3]}P{i+1}"
+				file = os.path.join(parent_dir, insta_folder_name, f"{name}.png")
+				if not os.path.exists(file) or recreate:
+					panel = image.crop((0, i*y,  x, (i+2)*y))
+					panel = panel.crop((-400, 0, x+400,2400))
+					print(f'Saving:{file}')
+					panel.save(file)
+
 def Execute():
 	copy_stuff(pages_files)
 	if options.insta:
-		Slice_for_Instagram(pages_files)
+		Slice_for_Instagram_V2(pages_files)
 
 if __name__=="__main__":
 	Execute()
