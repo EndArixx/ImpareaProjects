@@ -24,7 +24,7 @@ class coordinate:
 		self.bottom = bottom
 
 
-exceptions = {
+Overrides = {
 	#coordinate(left, top, right, bottom)
 	"004P2": coordinate(0,1200,1600,2800),
 	"004P3": coordinate(0,2200,1600,3800),
@@ -39,6 +39,20 @@ exceptions = {
 	"012P2": coordinate(0,1000,1600,2600),
 	"012P3": coordinate(0,2200,1600,3800),
 }
+
+doubles = [
+	"004P3",
+	"007P3",
+	"014P3",
+	"036P1",
+	"036P3",
+	"041P1",
+	"041P3",
+	"046P1",
+	"046P3",
+	"051P3",
+	"052P3",
+]
 
 #delete existing
 for remove_path in remove_files:
@@ -94,9 +108,16 @@ def Slice_for_Instagram(instafiles, recreate = False):
 			panels = []
 			for i in range(height//y):
 				name = f"{image_name[0:3]}P{i+1}"
-				file = os.path.join(parent_dir, insta_folder_name, "{0}P{1}.png".format(image_name[0:3], i+1))
-				if name in exceptions.keys():
-					ex = exceptions[name]
+				file = os.path.join(parent_dir, insta_folder_name, f"{name}.png")
+				if name in doubles:
+					s = name.split('.')
+					doubleFile = os.path.join(parent_dir, insta_folder_name, f"{name}D.png")
+					panel = image.crop((0,   i*y,  x, (i+2)*y))
+					panel = panel.crop((-400,   0, x+400,2400))
+					print(f'Saving DOUBLE:{doubleFile}')
+					panel.save(doubleFile)
+				if name in Overrides.keys():
+					ex = Overrides[name]
 					panel = image.crop((ex.left, ex.top, ex.right, ex.bottom))
 					print(f'Saving CUSTOM:{file}')
 					panel.save(file)
@@ -109,7 +130,7 @@ def Slice_for_Instagram(instafiles, recreate = False):
 
 def Execute():
 	copy_stuff(pages_files)
-	if options.insta: 
+	if options.insta:
 		Slice_for_Instagram(pages_files)
 
 if __name__=="__main__":
