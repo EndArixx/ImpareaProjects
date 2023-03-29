@@ -110,9 +110,10 @@ def UI():
 
     buttonRegen = tkinter.Button(top, text ="Regenerate", command = regenImp)
     buttonRegen.pack(pady=10,padx=10,in_=top, side=LEFT)
-    buttonExport = tkinter.Button(top, text ="Export Imp", command = exportImp)
+    buttonExport = tkinter.Button(top, text ="Export", command = exportImp)
     buttonExport.pack(pady=10,padx=10,in_=top, side=LEFT)
-
+    buttonExit = Button(top, text="Exit", command=top.destroy)
+    buttonExit.pack(pady=10,padx=10,in_=top, side=LEFT)
 
     textName.insert(tkinter.END, imp.name)
     textTransform.insert(tkinter.END, imp.transform)
