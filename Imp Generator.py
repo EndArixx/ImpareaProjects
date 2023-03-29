@@ -56,11 +56,11 @@ def Generate_An_Imp():
 def UI():
     global imp
     imp = Generate_An_Imp()
-    top = tkinter.Tk()
-    top.title('Imp Generator')
+    root = tkinter.Tk()
+    root.title('Imp Generator')
     textWidth = 45
     labelPaddingY = (10,0) 
-    paddingX = 10
+    padding = 10
 
     def regenImp():
         global imp 
@@ -88,37 +88,37 @@ def UI():
         
 
 
-    labelName = Label(top, text="Name")
+    labelName = Label(root, text="Name")
     labelName.pack(pady=labelPaddingY)
-    textName = Text(top, height = 1, width = textWidth)
-    textName.pack(padx=paddingX)
+    textName = Text(root, height = 1, width = textWidth)
+    textName.pack(padx=padding)
 
-    labelTransform = Label(top, text="Transform")
+    labelTransform = Label(root, text="Transform")
     labelTransform.pack(pady=labelPaddingY)
-    textTransform = Text(top, height = 1, width = textWidth)
-    textTransform.pack(padx=paddingX)
+    textTransform = Text(root, height = 1, width = textWidth)
+    textTransform.pack(padx=padding)
 
-    labelPronouns = Label(top, text="Pronouns")
+    labelPronouns = Label(root, text="Pronouns")
     labelPronouns.pack(pady=labelPaddingY)
-    textPronouns = Text(top, height = 1, width = textWidth)
-    textPronouns.pack(padx=paddingX)
+    textPronouns = Text(root, height = 1, width = textWidth)
+    textPronouns.pack(padx=padding)
 
-    labelColor = Label(top, text="Color")
+    labelColor = Label(root, text="Color")
     labelColor.pack(pady=labelPaddingY)
-    textColor = Text(top, height = 1, width = textWidth)
-    textColor.pack(padx=paddingX)
+    textColor = Text(root, height = 1, width = textWidth)
+    textColor.pack(padx=padding)
 
-    buttonRegen = tkinter.Button(top, text ="Regenerate", command = regenImp)
-    buttonRegen.pack(pady=10,padx=10,in_=top, side=LEFT)
-    buttonExport = tkinter.Button(top, text ="Export", command = exportImp)
-    buttonExport.pack(pady=10,padx=10,in_=top, side=LEFT)
-    buttonExit = Button(top, text="Exit", command=top.destroy)
-    buttonExit.pack(pady=10,padx=10,in_=top, side=LEFT)
+    buttonRegen = tkinter.Button(root, text ="Regenerate", command = regenImp)
+    buttonRegen.pack(pady=padding,padx=padding,in_=root, side=LEFT)
+    buttonExport = tkinter.Button(root, text ="Export", command = exportImp)
+    buttonExport.pack(pady=padding,padx=padding,in_=root, side=LEFT)
+    buttonExit = Button(root, text="Exit", command=root.destroy)
+    buttonExit.pack(pady=padding,padx=padding,in_=root, side=LEFT)
 
     textName.insert(tkinter.END, imp.name)
     textTransform.insert(tkinter.END, imp.transform)
     textPronouns.insert(tkinter.END, imp.pronouns)
     textColor.insert(tkinter.END, imp.color)
 
-    top.mainloop()
+    root.mainloop()
 UI()
