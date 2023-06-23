@@ -10,7 +10,8 @@ parser.add_option("-t", "--transform", action="store_true", dest="transform", de
 (options, args) = parser.parse_args()
 
 file_type = '.png'
-insta_folder_name = 'Insta'
+insta_half_folder_name = 'Insta-Half'
+insta_Quarter_folder_name = 'Insta-Quarter'
 transform_folder_name = 'Transforms'
 uncensored_folder_name = '(U)'
 parent_dir = pathlib.Path(__file__).parent.resolve()
@@ -25,7 +26,7 @@ class coordinate:
 		self.right = right
 		self.bottom = bottom
 
-
+#TODO: Make this a file.
 transforms = [
 	"004P2",
 	"007P2",
@@ -38,14 +39,17 @@ transforms = [
 	"046P2",
 	"051P2",
 	"052P2",
+	"088P1",
+	"088P2",
 ]
 
 #delete existing
 for remove_path in remove_files:
 	print('deleting:{}'.format(remove_path.split('\\')[-1]))
-	insta = not remove_path.__contains__('\\'+insta_folder_name+'\\') or options.insta
+	instahalf = not remove_path.__contains__('\\'+insta_half_folder_name+'\\') or options.insta
+	instaquarter = not remove_path.__contains__('\\'+insta_Quarter_folder_name+'\\') or options.insta
 	transform = not remove_path.__contains__('\\'+transform_folder_name+'\\') or options.transform
-	if insta and transform: 
+	if instahalf and instaquarter and transform: 
 		os.remove(remove_path)
 
 def if_not_exist_make_folder(path):
@@ -83,8 +87,8 @@ def copy_stuff(files):
 			shutil.copy(image_path,image_destination)
 
 
-def Slice(files,folder, instagram=False):
-	print("Creating Instagram Files")
+def Slice(files,folder, instagram=False, quarter= False):
+	print("Slicing Files")
 	if_not_exist_make_folder(folder)
 	for image_path in files:
 		image_path_split = image_path.split('\\')
@@ -93,16 +97,23 @@ def Slice(files,folder, instagram=False):
 		image = Image.open(image_path)
 		if "{}{}".format(image_dir,file_type) == image_name:
 			x, height = image.size
-			y = 2400
+			if quarter:
+				y = 1200
+			else:
+				y = 2400
+
 			for i in range(height//y):
 				name = f"{image_name[0:3]}P{i+1}"
 				file = os.path.join(parent_dir, folder, f"{name}.png")
 				if instagram or name in transforms:
 					panel = image.crop((0, i*y,  x, (i+2)*y))
-					if instagram:
+					if instagram and quarter:
+						panel = panel.crop((0, 0, x,y))
+						panel = panel.crop((0, -200, x,y + 200))
+					elif instagram:
 						panel = panel.crop((-400, 0, x+400,2400))
 					else:
-						panel = panel.crop((0, 0, x,2400))
+						panel = panel.crop((0, 0, x, y))
 					print(f'Saving:{file}')
 					panel.save(file)
 
@@ -110,7 +121,8 @@ def Slice(files,folder, instagram=False):
 def Execute():
 	copy_stuff(pages_files)
 	if options.insta:
-		Slice(pages_files,insta_folder_name, True)
+		Slice(pages_files,insta_Quarter_folder_name, True, True)
+		Slice(pages_files,insta_half_folder_name, True)
 	if options.transform:
 		Slice(pages_files, transform_folder_name)
 
