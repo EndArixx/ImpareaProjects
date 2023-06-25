@@ -7,11 +7,14 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-i", "--insta", action="store_true", dest="insta", default=False)
 parser.add_option("-t", "--transform", action="store_true", dest="transform", default=False)
+parser.add_option("-s", "--slice", action="store_true", dest="slice", default=False)
 (options, args) = parser.parse_args()
 
 file_type = '.png'
 insta_half_folder_name = 'Insta-Half'
 insta_Quarter_folder_name = 'Insta-Quarter'
+slice_half_folder_name = 'Slice-Half'
+slice_Quarter_folder_name = 'Slice-Quarter'
 transform_folder_name = 'Transforms'
 uncensored_folder_name = '(U)'
 parent_dir = pathlib.Path(__file__).parent.resolve()
@@ -48,8 +51,10 @@ for remove_path in remove_files:
 	print('deleting:{}'.format(remove_path.split('\\')[-1]))
 	instahalf = not remove_path.__contains__('\\'+insta_half_folder_name+'\\') or options.insta
 	instaquarter = not remove_path.__contains__('\\'+insta_Quarter_folder_name+'\\') or options.insta
+	slicehalf	 = not remove_path.__contains__('\\'+slice_half_folder_name+'\\') or options.slice
+	slicequarter = not remove_path.__contains__('\\'+slice_Quarter_folder_name+'\\') or options.slice
 	transform = not remove_path.__contains__('\\'+transform_folder_name+'\\') or options.transform
-	if instahalf and instaquarter and transform: 
+	if instahalf and instaquarter and transform and slicehalf and slicequarter: 
 		os.remove(remove_path)
 
 def if_not_exist_make_folder(path):
@@ -86,6 +91,25 @@ def copy_stuff(files):
 		if image_destination != 'ERROR':
 			shutil.copy(image_path,image_destination)
 
+def Slice_Transform(files,folder):
+	print("Slicing Files")
+	if_not_exist_make_folder(folder)
+	for image_path in files:
+		image_path_split = image_path.split('\\')
+		image_dir = image_path_split[-2]
+		image_name = image_path_split[-1]
+		image = Image.open(image_path)
+		if "{}{}".format(image_dir,file_type) == image_name:
+			x, height = image.size
+			y = 2400
+			for i in range(height//y):
+				name = f"{image_name[0:3]}P{i+1}"
+				file = os.path.join(parent_dir, folder, f"{name}.png")
+				if name in transforms:
+					panel = image.crop((0, i*y,  x, (i+2)*y))
+					panel = panel.crop((0, 0, x, y))
+					print(f'Saving:{file}')
+					panel.save(file)
 
 def Slice(files,folder, instagram=False, quarter= False):
 	print("Slicing Files")
@@ -101,21 +125,19 @@ def Slice(files,folder, instagram=False, quarter= False):
 				y = 1200
 			else:
 				y = 2400
-
 			for i in range(height//y):
 				name = f"{image_name[0:3]}P{i+1}"
 				file = os.path.join(parent_dir, folder, f"{name}.png")
-				if instagram or name in transforms:
-					panel = image.crop((0, i*y,  x, (i+2)*y))
-					if instagram and quarter:
-						panel = panel.crop((0, 0, x,y))
-						panel = panel.crop((0, -200, x,y + 200))
-					elif instagram:
-						panel = panel.crop((-400, 0, x+400,2400))
-					else:
-						panel = panel.crop((0, 0, x, y))
-					print(f'Saving:{file}')
-					panel.save(file)
+				panel = image.crop((0, i*y,  x, (i+2)*y))
+				if instagram and quarter:
+					panel = panel.crop((0, 0, x,y))
+					panel = panel.crop((0, -200, x,y + 200))
+				elif instagram:
+					panel = panel.crop((-400, 0, x+400,2400))
+				else:
+					panel = panel.crop((0, 0, x, y))
+				print(f'Saving:{file}')
+				panel.save(file)
 
 
 def Execute():
@@ -124,7 +146,10 @@ def Execute():
 		Slice(pages_files,insta_Quarter_folder_name, True, True)
 		Slice(pages_files,insta_half_folder_name, True)
 	if options.transform:
-		Slice(pages_files, transform_folder_name)
+		Slice_Transform(pages_files, transform_folder_name)
+	if options.slice:
+		Slice(pages_files,slice_Quarter_folder_name, quarter=True)
+		Slice(pages_files,slice_half_folder_name)
 
 if __name__=="__main__":
 	Execute()
