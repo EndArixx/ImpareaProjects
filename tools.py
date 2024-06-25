@@ -3,15 +3,14 @@ from tkinter import messagebox
 from pathlib import Path
 
 
-
-
 def openfile(str):
     return open(str, "r").read().split("\n")
 
+
 def if_not_exist_make_folder(path):
-        full_path = Path(path)
-        if not full_path.exists():
-            full_path.mkdir()
+    full_path = Path(path)
+    if not full_path.exists():
+        full_path.mkdir()
 
 
 class Keys:
@@ -66,7 +65,9 @@ class Settings:
         # Prompt for missing or failing Settings
 
         if Keys.DebugMode not in self.data:
-            response = messagebox.askquestion("DebugMode", "Would you like to turn on 'Debug Mode'?")
+            response = messagebox.askquestion(
+                "DebugMode", "Would you like to turn on 'Debug Mode'?"
+            )
             self.setSetting(Keys.DebugMode, response)
 
         if Keys.ComicFolder not in self.data or not Path(self.getComicDir()).is_dir():
@@ -75,12 +76,19 @@ class Settings:
                 self.setSetting(Keys.ComicFolder, url)
 
         if Keys.ImpsSave not in self.data or not Path(self.getImpsSave()).is_file():
-            url = askopenfilename(title='Select Imps File',filetypes=[("CSV files", "*.csv")])
+            url = askopenfilename(
+                title="Select Imps File", filetypes=[("CSV files", "*.csv")]
+            )
             if url:
                 self.setSetting(Keys.ImpsSave, url)
 
-        if Keys.TransformsSave not in self.data or not Path(self.getTransformSave()).is_file():
-            url = askopenfilename(title='Select Transforms File',filetypes=[("CSV files", "*.csv")])
+        if (
+            Keys.TransformsSave not in self.data
+            or not Path(self.getTransformSave()).is_file()
+        ):
+            url = askopenfilename(
+                title="Select Transforms File", filetypes=[("CSV files", "*.csv")]
+            )
             if url:
                 self.setSetting(Keys.TransformsSave, url)
 
@@ -104,6 +112,6 @@ class Settings:
 
     def getImpsSave(self):
         return self.getSetting(Keys.ImpsSave)
-    
+
     def getTransformSave(self):
         return self.getSetting(Keys.TransformsSave)
