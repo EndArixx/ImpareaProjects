@@ -1,4 +1,4 @@
-from tkinter.filedialog import askdirectory, askopenfile, askopenfilename
+from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter import messagebox
 from pathlib import Path
 

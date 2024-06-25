@@ -3,7 +3,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import simpledialog
 import shutil
-import tools
+import utilities.tools as tools
 
 
 def GenerateNewPage():

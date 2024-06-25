@@ -3,7 +3,7 @@ import shutil
 from glob import glob
 from PIL import Image
 from optparse import OptionParser
-import tools
+import utilities.tools as tools
 
 
 class EpisodeCollector:
