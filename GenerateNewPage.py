@@ -39,7 +39,7 @@ def GenerateNewPage():
 
         # Create and copy
         page_path.mkdir(exist_ok=True)
-        shutil.copy(page_template_path,page_file_name)
+        shutil.copy(page_template_path, page_file_name)
         settings.printDebug(f"Created: {page_path}")
 
 

@@ -72,11 +72,13 @@ class ImpGenerator:
         pronouns = self.Get_Pronouns()
         color = self.Get_Color()
         return Imp(name, transform, pronouns, color)
-    
-    def Export_An_Imp(self, export_imp:Imp):
+
+    def Export_An_Imp(self, export_imp: Imp):
         exportPath = self.settings.getImpsSave()
         with open(exportPath, "a+") as f:
-            f.write(f"{export_imp.name},{export_imp.transform},{export_imp.pronouns},{export_imp.color}\n")
+            f.write(
+                f"{export_imp.name},{export_imp.transform},{export_imp.pronouns},{export_imp.color}\n"
+            )
 
 
 def Run_StandAlone():
