@@ -107,7 +107,3 @@ class Settings:
     
     def getTransformSave(self):
         return self.getSetting(Keys.TransformsSave)
-
-
-if __name__ == "__main__":
-    s = Settings()
