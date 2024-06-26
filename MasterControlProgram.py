@@ -1,14 +1,20 @@
+from pathlib import Path
 import tkinter as tk
 from CollectEpisodes import *
 import GenerateNewPage as gnp
 import threading
 
-TEXT_COLOR = "black"
+PRIMARY_TEXT_COLOR = "black"
 PRIMARY_COLOR = "MediumSpringGreen"
+INPUT_COLOR = "white"
 ACCENT_COLOR = "plum"
 WARNING_COLOR = "crimson"
 WARNING_TEXT_COLOR = "white"
 CLEAR_COLOR = "snow"
+HEADER_FONT = "Handlee 14 bold"
+TEXT_FONT = "Courier 12"
+PADDING = 5
+settings = tools.Settings()
 
 
 class App(tk.Tk):
@@ -17,7 +23,7 @@ class App(tk.Tk):
         self.wm_attributes("-transparentcolor", CLEAR_COLOR)
         self.title("Imparea Comic Utilities")
         self.configure(background=CLEAR_COLOR)
-        self.minsize(500, 0)
+        self.minsize(600, 0)
         self.overrideredirect(1)
         self.attributes("-topmost", True)
         self.grid_columnconfigure(0, weight=1)
@@ -51,21 +57,23 @@ def menu_zone(frame, root):
         frame,
         text="Imparia Solutions!",
         foreground=PRIMARY_COLOR,
-        background=TEXT_COLOR,
+        background=PRIMARY_TEXT_COLOR,
+        font=HEADER_FONT,
     )
     label.bind("<Button-1>", root.startMove)
     label.bind("<ButtonRelease-1>", root.stopMove)
     label.bind("<B1-Motion>", root.moving)
-    label.grid(column=0, row=0, columnspan=2, sticky="ew", padx=5, pady=5)
+    label.grid(column=0, row=0, columnspan=2, sticky="ew")
 
     exit_button = tk.Button(
         frame,
         text="✕",
         command=root.destroy,
-        background=TEXT_COLOR,
+        background=PRIMARY_TEXT_COLOR,
         foreground=PRIMARY_COLOR,
+        font=HEADER_FONT,
     )
-    exit_button.grid(row=0, column=1, sticky="e", padx=5, pady=5)
+    exit_button.grid(row=0, column=1, sticky="e")
 
 
 def generate_page_zone(frame):
@@ -99,14 +107,32 @@ def generate_page_zone(frame):
     frame.grid_columnconfigure(0, weight=0)
     frame.grid_columnconfigure(1, weight=1)
 
-    zone_label = tk.Label(frame, text="Generate New Page", background=PRIMARY_COLOR)
-    zone_label.grid(column=0, row=0, columnspan=3, sticky="we", padx=5, pady=5)
+    zone_label = tk.Label(
+        frame,
+        text="Generate New Page",
+        foreground=PRIMARY_TEXT_COLOR,
+        background=PRIMARY_COLOR,
+        font=TEXT_FONT,
+    )
+    zone_label.grid(column=0, row=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING)
 
-    pagetitle_label = tk.Label(frame, text="Page Title:", background=PRIMARY_COLOR)
-    pagetitle_label.grid(column=0, row=1, sticky="w", padx=5, pady=5)
+    pagetitle_label = tk.Label(
+        frame,
+        text="Page Title:",
+        foreground=PRIMARY_TEXT_COLOR,
+        background=PRIMARY_COLOR,
+        font=TEXT_FONT,
+    )
+    pagetitle_label.grid(column=0, row=1, sticky="w", padx=PADDING, pady=PADDING)
 
-    pagetitle_entry = tk.Entry(frame, textvariable=pagetitle_var)
-    pagetitle_entry.grid(column=1, row=1, sticky="we", padx=5, pady=5)
+    pagetitle_entry = tk.Entry(
+        frame,
+        foreground=PRIMARY_TEXT_COLOR,
+        background=INPUT_COLOR,
+        font=TEXT_FONT,
+        textvariable=pagetitle_var,
+    )
+    pagetitle_entry.grid(column=1, row=1, sticky="we", padx=PADDING, pady=PADDING)
 
     generatepage_button = tk.Button(
         frame,
@@ -114,14 +140,17 @@ def generate_page_zone(frame):
         command=gen,
         state="disable",
         background=ACCENT_COLOR,
+        foreground=PRIMARY_TEXT_COLOR,
+        font=TEXT_FONT,
     )
-    generatepage_button.grid(column=2, row=1, sticky="e", padx=5, pady=5)
+    generatepage_button.grid(column=2, row=1, sticky="e", padx=PADDING, pady=PADDING)
 
 
 def collect_episodes_zone(frame):
     episode_collector = EpisodeCollector()
-    for i in range(4):
+    for i in range(2):
         frame.grid_columnconfigure(i, weight=1)
+        frame.grid_rowconfigure(i, weight=1)
 
     def collect(mode, message):
         def execute_collection(mode):
@@ -148,60 +177,82 @@ def collect_episodes_zone(frame):
     def disable_all():
         warning_label.grid()
         collect_button["state"] = "disable"
-        collect_button.grid_remove()
         slice_button["state"] = "disable"
-        slice_button.grid_remove()
         square_button["state"] = "disable"
-        square_button.grid_remove()
         transforms_button["state"] = "disable"
-        transforms_button.grid_remove()
 
     def enable_all():
         warning_label.grid_remove()
         collect_button["state"] = "normal"
-        collect_button.grid()
         slice_button["state"] = "normal"
-        slice_button.grid()
         square_button["state"] = "normal"
-        square_button.grid()
         transforms_button["state"] = "normal"
-        transforms_button.grid()
 
     collect_button = tk.Button(
         frame,
         text="Collect Episodes",
         command=collect_episodes,
         background=ACCENT_COLOR,
+        foreground=PRIMARY_TEXT_COLOR,
+        font=TEXT_FONT,
     )
-    collect_button.grid(row=0, column=0, padx=5, pady=5, sticky="we")
+    collect_button.grid(row=0, column=0, padx=PADDING, pady=PADDING, sticky="we")
 
     slice_button = tk.Button(
-        frame, text="Slice Episodes", command=slice_episodes, background=ACCENT_COLOR
+        frame,
+        text="Slice Episodes",
+        command=slice_episodes,
+        foreground=PRIMARY_TEXT_COLOR,
+        background=ACCENT_COLOR,
+        font=TEXT_FONT,
     )
-    slice_button.grid(row=0, column=1, padx=5, pady=5, sticky="we")
+    slice_button.grid(row=0, column=1, padx=PADDING, pady=PADDING, sticky="we")
 
     square_button = tk.Button(
-        frame, text="Square Episodes", command=square_episodes, background=ACCENT_COLOR
+        frame,
+        text="Square Episodes",
+        command=square_episodes,
+        foreground=PRIMARY_TEXT_COLOR,
+        background=ACCENT_COLOR,
+        font=TEXT_FONT,
     )
-    square_button.grid(row=0, column=2, padx=5, pady=5, sticky="we")
+    square_button.grid(row=1, column=0, padx=PADDING, pady=PADDING, sticky="we")
 
     transforms_button = tk.Button(
         frame,
         text="Collect Transform",
         command=collect_transforms,
+        foreground=PRIMARY_TEXT_COLOR,
         background=ACCENT_COLOR,
+        font=TEXT_FONT,
     )
-    transforms_button.grid(row=0, column=3, padx=5, pady=5, sticky="we")
+    transforms_button.grid(row=1, column=1, padx=PADDING, pady=PADDING, sticky="we")
 
     warning_label = tk.Label(
         frame,
-        text="Warning: Collection currently running.",
+        text="Executing Collection",
         foreground=WARNING_TEXT_COLOR,
         background=WARNING_COLOR,
-        font="Helvetica 16 bold",
+        font=HEADER_FONT,
     )
-    warning_label.grid(row=1, column=0, columnspan=4, sticky="ew")
+    warning_label.grid(row=0, column=0, rowspan=2, columnspan=2, sticky="ew")
     warning_label.grid_remove()
+
+
+def file_zone(frame):
+    def open_comic_folder():
+        print(settings.getComicDir())
+        os.startfile(settings.getComicDir())
+
+    open_comic_button = tk.Button(
+        frame,
+        text="Open Comic Folder",
+        command=open_comic_folder,
+        background=PRIMARY_TEXT_COLOR,
+        foreground=PRIMARY_COLOR,
+        font=TEXT_FONT,
+    )
+    open_comic_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
 
 
 def setup_frame(root, row=0, column=0, sticky="new", color=CLEAR_COLOR):
@@ -216,7 +267,7 @@ def execute_primary_function():
     i = 0
 
     # Menu
-    m_frame = setup_frame(root, row=i, column=0, color=TEXT_COLOR)
+    m_frame = setup_frame(root, row=i, column=0, color=PRIMARY_TEXT_COLOR)
     menu_zone(m_frame, root)
     i += 1
 
@@ -230,6 +281,12 @@ def execute_primary_function():
     collect_episodes_zone(ce_frame)
     i += 1
 
+    # File zone
+    fz_frame = setup_frame(root, row=i, column=0, color=CLEAR_COLOR)
+    file_zone(fz_frame)
+    i += 1
+
+    # execute the GUI
     root.mainloop()
 
 
