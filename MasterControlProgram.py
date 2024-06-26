@@ -1,10 +1,13 @@
+import sys
 import tkinter as tk
 import PyInstaller.__main__
 from CollectEpisodes import *
 import GenerateNewPage as gnp
 import threading
 
+
 VERSION = "v0.1.2"
+EXE_NAME = "Imparean Solutions"
 PRIMARY_TEXT_COLOR = "black"
 PRIMARY_COLOR = "MediumSpringGreen"
 INPUT_COLOR = "white"
@@ -56,7 +59,7 @@ def menu_zone(frame, root):
 
     label = tk.Label(
         frame,
-        text=f"Imparia Solutions {VERSION}",
+        text=f"{EXE_NAME} - {VERSION}",
         foreground=PRIMARY_COLOR,
         background=PRIMARY_TEXT_COLOR,
         font=HEADER_FONT,
@@ -269,7 +272,7 @@ def file_zone(frame):
                     "MasterControlProgram.py",
                     "--onefile",
                     "--icon=data/mcp.ico",
-                    f"--name=Imparean Tools {VERSION}",
+                    f"--name={EXE_NAME} {VERSION}",
                 ]
             )
             tk.messagebox.showinfo(title="Complete", message="Executable Created")
@@ -298,7 +301,7 @@ def file_zone(frame):
         font=TEXT_FONT,
     )
     create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
-    if not settings.in_debug_Mode:
+    if not settings.in_debug_Mode or EXE_NAME in sys.executable:
         create_exe_button.grid_remove()
 
     warning_label = tk.Label(
