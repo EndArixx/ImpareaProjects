@@ -80,9 +80,7 @@ class EpisodeCollector:
         trim_image = Image.open(trim_image_Path)
         trim_image_width, trim_image_height = trim_image.size
         if trim_image_height > 4800:
-            print(
-                "trimming:{}".format(trim_image_Path.split("\\")[-1])
-            )
+            print("trimming:{}".format(trim_image_Path.split("\\")[-1]))
             left = 0
             top = 1200
             right = trim_image_width
@@ -161,9 +159,7 @@ class EpisodeCollector:
     def CleanUp(self):
         for folder in glob(f"{self.png_dir}*\\"):
             if len(os.listdir(folder)) == 0:
-                print(
-                    f"Removing Empty Directory: {folder.split('\\')[-2]}"
-                )
+                print(f"Removing Empty Directory: {folder.split('\\')[-2]}")
                 os.rmdir(folder)
 
     def execute(self, Mode=""):

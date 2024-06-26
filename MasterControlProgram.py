@@ -269,7 +269,7 @@ def file_zone(frame):
                     "MasterControlProgram.py",
                     "--onefile",
                     "--icon=data/mcp.ico",
-                    '--name=Imparean Tools',
+                    f"--name=Imparean Tools {VERSION}",
                 ]
             )
             tk.messagebox.showinfo(title="Complete", message="Executable Created")
@@ -300,7 +300,7 @@ def file_zone(frame):
     create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
     if not settings.in_debug_Mode:
         create_exe_button.grid_remove()
-        
+
     warning_label = tk.Label(
         frame,
         text="Creating Executable",
