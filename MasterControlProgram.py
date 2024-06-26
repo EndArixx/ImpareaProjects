@@ -298,7 +298,9 @@ def file_zone(frame):
         font=TEXT_FONT,
     )
     create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
-
+    if not settings.in_debug_Mode:
+        create_exe_button.grid_remove()
+        
     warning_label = tk.Label(
         frame,
         text="Creating Executable",

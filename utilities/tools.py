@@ -27,8 +27,9 @@ class Settings:
         self.settingsFile = self.settingLocation / "settings"
         self.data = {}
         self.loadSettings()
+        self.in_debug_Mode = self.getSettingIsOn(Keys.DebugMode)
 
-    def printDebug(self, str):
+    def print_debug(self, str):
         if self.getSettingIsOn(Keys.DebugMode):
             print(f"{str}")
 
@@ -47,7 +48,7 @@ class Settings:
 
     def setSetting(self, key: str, value: str):
         self.data[key] = value
-        self.printDebug(f"Adding: {key} : {value}")
+        self.print_debug(f"Adding: {key} : {value}")
         self.saveSettings()
 
     def loadSettings(self):
@@ -95,13 +96,13 @@ class Settings:
         if Keys.ImageExtention not in self.data:
             self.setSetting(Keys.ImageExtention, ".png")
 
-        self.printDebug(f"Loaded: {self.settingsFile}\nSettings: {str(self.data)}")
+        self.print_debug(f"Loaded: {self.settingsFile}\nSettings: {str(self.data)}")
 
     def saveSettings(self):
         with open(self.settingsFile, "w") as f:
             for k, v in self.data.items():
                 if k and v:
-                    self.printDebug(f"Writing: {k},{v}\n")
+                    self.print_debug(f"Writing: {k},{v}\n")
                     f.write(f"{k},{v}\n")
 
     def getComicDir(self):

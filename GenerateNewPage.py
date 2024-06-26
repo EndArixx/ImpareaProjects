@@ -56,9 +56,9 @@ def generate_new_page(page_title):
         # Create and copy
         page_path.mkdir(exist_ok=True)
         shutil.copy(page_template_path, page_file_name)
-        settings.printDebug(f"Created: {page_path}")
+        print(f"Created: {page_path}")
     else:
-        settings.printDebug(f"{page_title} is not a valid Title.")
+        print(f"{page_title} is not a valid Title.")
 
 
 if __name__ == "__main__":

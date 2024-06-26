@@ -45,7 +45,7 @@ class EpisodeCollector:
 
     def deleteExisting(self):
         for remove_path in self.remove_files:
-            self.settings.printDebug("deleting:{}".format(remove_path.split("\\")[-1]))
+            print("deleting:{}".format(remove_path.split("\\")[-1]))
             instahalf = (
                 not remove_path.__contains__("\\" + self.square_half_folder_name + "\\")
                 or options.insta
@@ -80,7 +80,7 @@ class EpisodeCollector:
         trim_image = Image.open(trim_image_Path)
         trim_image_width, trim_image_height = trim_image.size
         if trim_image_height > 4800:
-            self.settings.printDebug(
+            print(
                 "trimming:{}".format(trim_image_Path.split("\\")[-1])
             )
             left = 0
@@ -100,10 +100,10 @@ class EpisodeCollector:
             image_destination = "ERROR"
             self.trim_headers(image_path)
             if "{}{}".format(image_dir, self.image_file_type) == image_name:
-                self.settings.printDebug("copying:{}".format(image_name))
+                print("copying:{}".format(image_name))
                 image_destination = os.path.join(self.png_dir, image_name)
             elif "{}(U){}".format(image_dir, self.image_file_type) == image_name:
-                self.settings.printDebug("copying:{} (Uncensored)".format(image_name))
+                print("copying:{} (Uncensored)".format(image_name))
                 image_destination = os.path.join(
                     self.png_dir, self.uncensored_folder_name, image_name
                 )
@@ -111,7 +111,7 @@ class EpisodeCollector:
                 shutil.copy(image_path, image_destination)
 
     def Slice_Transform(self, files, folder):
-        self.settings.printDebug("Slicing Transforms")
+        print("Slicing Transforms")
         self.if_not_exist_make_folder(folder)
         for image_path in files:
             image_path_split = image_path.split("\\")
@@ -127,11 +127,11 @@ class EpisodeCollector:
                     if name in self.transforms:
                         panel = image.crop((0, i * y, x, (i + 2) * y))
                         panel = panel.crop((0, 0, x, y))
-                        self.settings.printDebug(f"Saving:{file}")
+                        print(f"Saving:{file}")
                         panel.save(file)
 
     def Slice(self, files, folder, square=False, quarter=False):
-        self.settings.printDebug("Slicing Files")
+        print("Slicing Files")
         self.if_not_exist_make_folder(folder)
         for image_path in files:
             image_path_split = image_path.split("\\")
@@ -155,13 +155,13 @@ class EpisodeCollector:
                         panel = panel.crop((-400, 0, x + 400, 2400))
                     else:
                         panel = panel.crop((0, 0, x, y))
-                    self.settings.printDebug(f"Saving:{file}")
+                    print(f"Saving:{file}")
                     panel.save(file)
 
     def CleanUp(self):
         for folder in glob(f"{self.png_dir}*\\"):
             if len(os.listdir(folder)) == 0:
-                self.settings.printDebug(
+                print(
                     f"Removing Empty Directory: {folder.split('\\')[-2]}"
                 )
                 os.rmdir(folder)
