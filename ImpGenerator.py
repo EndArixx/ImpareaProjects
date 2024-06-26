@@ -1,11 +1,9 @@
-from operator import truediv
 from random import *
 import random
 import string
 import tkinter
 import utilities.tools as tools
 from tkinter import *
-from os.path import exists
 
 
 class Imp:

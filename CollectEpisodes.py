@@ -5,6 +5,10 @@ from PIL import Image
 from optparse import OptionParser
 import utilities.tools as tools
 
+MODE_SLICE = "s"
+MODE_TRANSFORM = "t"
+MODE_SQUARE = "q"
+
 
 class EpisodeCollector:
 
@@ -162,14 +166,14 @@ class EpisodeCollector:
                 )
                 os.rmdir(folder)
 
-    def Execute(self, slice_all=False, slice_transforms=False, slice_square=False):
+    def execute(self, Mode=""):
         self.copy_stuff(self.pages_files)
-        if slice_all:
+        if MODE_SLICE in Mode:
             self.Slice(self.pages_files, self.slice_Quarter_folder_name, quarter=True)
             self.Slice(self.pages_files, self.slice_half_folder_name)
-        if slice_transforms:
+        if MODE_SLICE in Mode:
             self.Slice_Transform(self.pages_files, self.transform_folder_name)
-        if slice_square:
+        if MODE_SLICE in Mode:
             self.Slice(self.pages_files, self.square_Quarter_folder_name, True, True)
             self.Slice(self.pages_files, self.square_half_folder_name, True)
         self.CleanUp()
@@ -182,4 +186,11 @@ if __name__ == "__main__":
     parser.add_option("-q", "--square", action="store_true", dest="q", default=False)
     (options, args) = parser.parse_args()
     collector = EpisodeCollector()
-    collector.Execute(options.s, options.t, options.q)
+    mode = ""
+    if options.s:
+        mode += MODE_SLICE
+    if options.t:
+        mode += MODE_TRANSFORM
+    if options.q:
+        mode += MODE_SQUARE
+    collector.execute(mode)
