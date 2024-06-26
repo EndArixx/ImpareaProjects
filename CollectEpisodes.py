@@ -171,9 +171,9 @@ class EpisodeCollector:
         if MODE_SLICE in Mode:
             self.Slice(self.pages_files, self.slice_Quarter_folder_name, quarter=True)
             self.Slice(self.pages_files, self.slice_half_folder_name)
-        if MODE_SLICE in Mode:
+        if MODE_TRANSFORM in Mode:
             self.Slice_Transform(self.pages_files, self.transform_folder_name)
-        if MODE_SLICE in Mode:
+        if MODE_SQUARE in Mode:
             self.Slice(self.pages_files, self.square_Quarter_folder_name, True, True)
             self.Slice(self.pages_files, self.square_half_folder_name, True)
         self.CleanUp()

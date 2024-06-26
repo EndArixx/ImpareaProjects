@@ -1,9 +1,10 @@
-from pathlib import Path
 import tkinter as tk
+import PyInstaller.__main__
 from CollectEpisodes import *
 import GenerateNewPage as gnp
 import threading
 
+VERSION = "v0.1.2"
 PRIMARY_TEXT_COLOR = "black"
 PRIMARY_COLOR = "MediumSpringGreen"
 INPUT_COLOR = "white"
@@ -55,7 +56,7 @@ def menu_zone(frame, root):
 
     label = tk.Label(
         frame,
-        text="Imparia Solutions!",
+        text=f"Imparia Solutions {VERSION}",
         foreground=PRIMARY_COLOR,
         background=PRIMARY_TEXT_COLOR,
         font=HEADER_FONT,
@@ -114,7 +115,9 @@ def generate_page_zone(frame):
         background=PRIMARY_COLOR,
         font=TEXT_FONT,
     )
-    zone_label.grid(column=0, row=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING)
+    zone_label.grid(
+        column=0, row=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING
+    )
 
     pagetitle_label = tk.Label(
         frame,
@@ -192,41 +195,41 @@ def collect_episodes_zone(frame):
         frame,
         text="Collect Episodes",
         command=collect_episodes,
-        background=ACCENT_COLOR,
         foreground=PRIMARY_TEXT_COLOR,
+        background=PRIMARY_COLOR,
         font=TEXT_FONT,
     )
     collect_button.grid(row=0, column=0, padx=PADDING, pady=PADDING, sticky="we")
-
-    slice_button = tk.Button(
-        frame,
-        text="Slice Episodes",
-        command=slice_episodes,
-        foreground=PRIMARY_TEXT_COLOR,
-        background=ACCENT_COLOR,
-        font=TEXT_FONT,
-    )
-    slice_button.grid(row=0, column=1, padx=PADDING, pady=PADDING, sticky="we")
-
-    square_button = tk.Button(
-        frame,
-        text="Square Episodes",
-        command=square_episodes,
-        foreground=PRIMARY_TEXT_COLOR,
-        background=ACCENT_COLOR,
-        font=TEXT_FONT,
-    )
-    square_button.grid(row=1, column=0, padx=PADDING, pady=PADDING, sticky="we")
 
     transforms_button = tk.Button(
         frame,
         text="Collect Transform",
         command=collect_transforms,
         foreground=PRIMARY_TEXT_COLOR,
-        background=ACCENT_COLOR,
+        background=PRIMARY_COLOR,
         font=TEXT_FONT,
     )
-    transforms_button.grid(row=1, column=1, padx=PADDING, pady=PADDING, sticky="we")
+    transforms_button.grid(row=0, column=1, padx=PADDING, pady=PADDING, sticky="we")
+
+    slice_button = tk.Button(
+        frame,
+        text="Slice Episodes",
+        command=slice_episodes,
+        foreground=PRIMARY_TEXT_COLOR,
+        background=PRIMARY_COLOR,
+        font=TEXT_FONT,
+    )
+    slice_button.grid(row=1, column=0, padx=PADDING, pady=PADDING, sticky="we")
+
+    square_button = tk.Button(
+        frame,
+        text="Square Episodes",
+        command=square_episodes,
+        foreground=PRIMARY_TEXT_COLOR,
+        background=PRIMARY_COLOR,
+        font=TEXT_FONT,
+    )
+    square_button.grid(row=1, column=1, padx=PADDING, pady=PADDING, sticky="we")
 
     warning_label = tk.Label(
         frame,
@@ -240,9 +243,41 @@ def collect_episodes_zone(frame):
 
 
 def file_zone(frame):
+    frame.grid_rowconfigure(0, weight=0)
+    frame.grid_columnconfigure(0, weight=0)
+    frame.grid_columnconfigure(1, weight=0)
+    frame.grid_columnconfigure(2, weight=1)
+
+    def disable_all():
+        warning_label.grid()
+        open_comic_button["state"] = "disable"
+        create_exe_button["state"] = "disable"
+
+    def enable_all():
+        warning_label.grid_remove()
+        open_comic_button["state"] = "normal"
+        create_exe_button["state"] = "normal"
+
     def open_comic_folder():
         print(settings.getComicDir())
         os.startfile(settings.getComicDir())
+
+    def create_exe():
+        def run_thread():
+            PyInstaller.__main__.run(
+                [
+                    "MasterControlProgram.py",
+                    "--onefile",
+                    "--icon=data/mcp.ico",
+                    '--name=Imparean Tools',
+                ]
+            )
+            tk.messagebox.showinfo(title="Complete", message="Executable Created")
+            enable_all()
+
+        disable_all()
+        thread = threading.Thread(target=run_thread, args=())
+        thread.start()
 
     open_comic_button = tk.Button(
         frame,
@@ -252,7 +287,27 @@ def file_zone(frame):
         foreground=PRIMARY_COLOR,
         font=TEXT_FONT,
     )
-    open_comic_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
+    open_comic_button.grid(row=0, column=0, sticky="w", padx=PADDING, pady=PADDING)
+
+    create_exe_button = tk.Button(
+        frame,
+        text="Create Executable",
+        command=create_exe,
+        background=PRIMARY_TEXT_COLOR,
+        foreground=PRIMARY_COLOR,
+        font=TEXT_FONT,
+    )
+    create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
+
+    warning_label = tk.Label(
+        frame,
+        text="Creating Executable",
+        foreground=WARNING_TEXT_COLOR,
+        background=WARNING_COLOR,
+        font=HEADER_FONT,
+    )
+    warning_label.grid(row=0, column=0, columnspan=3, sticky="ew")
+    warning_label.grid_remove()
 
 
 def setup_frame(root, row=0, column=0, sticky="new", color=CLEAR_COLOR):
