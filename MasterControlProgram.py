@@ -272,7 +272,7 @@ def file_zone(frame):
                     "MasterControlProgram.py",
                     "--onefile",
                     "--icon=data/mcp.ico",
-                    f"--name={PROGRAM_NAME} {VERSION}",
+                    f"--name={PROGRAM_NAME}",
                 ]
             )
             tk.messagebox.showinfo(title="Complete", message="Executable Created")
