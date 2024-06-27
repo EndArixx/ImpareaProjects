@@ -6,7 +6,7 @@ import GenerateNewPage as gnp
 import threading
 
 
-VERSION = "v0.1.3"
+VERSION = "v0.2.1"
 PROGRAM_NAME = "Imparean Solutions"
 PRIMARY_TEXT_COLOR = "black"
 PRIMARY_COLOR = "MediumSpringGreen"
