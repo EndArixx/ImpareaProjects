@@ -20,78 +20,78 @@ class Imp:
 class ImpGenerator:
     def __init__(self):
         self.settings = tools.Settings()
-        self.flavors = tools.openfile("data/flavors.csv")
-        self.adjectives = tools.openfile("data/adjectives.csv")
-        self.nouns = tools.openfile("data/nouns.csv")
-        self.colors = tools.openfile("data/colors.csv")
+        self.flavors = tools.open_file("data/flavors.csv")
+        self.adjectives = tools.open_file("data/adjectives.csv")
+        self.nouns = tools.open_file("data/nouns.csv")
+        self.colors = tools.open_file("data/colors.csv")
         self.alphabet = string.ascii_lowercase
 
-    def Get_Pronouns(self):
+    def get_pronouns(self):
         return choice(["She/Her", "He/Him", "They/Them", "Ask"])
 
-    def Get_255(self):
+    def get_255(self):
         return random.randint(0, 255)
 
-    def Get_Letter(self):
+    def get_letter(self):
         return choice(self.alphabet)
 
-    def Get_Upper_Letter(self):
-        return self.Get_Letter().upper()
+    def get_upper_letter(self):
+        return self.get_letter().upper()
 
-    def Get_IO(self):
+    def get_io(self):
         return choice(["i", "o"])
 
-    def Get_Word_With(self, letter, listofwords):
+    def get_word_with(self, letter, listofwords):
         return choice([x for x in listofwords if x.lower().startswith(letter)])
 
-    def Get_Flav(self, letter):
-        return self.Get_Word_With(letter, self.flavors).split(",")[0].capitalize()
+    def get_flav(self, letter):
+        return self.get_word_with(letter, self.flavors).split(",")[0].capitalize()
 
-    def Get_Adj(self, letter):
-        return self.Get_Word_With(letter, self.adjectives).capitalize()
+    def get_adj(self, letter):
+        return self.get_word_with(letter, self.adjectives).capitalize()
 
-    def Get_Noun(self, letter):
-        return self.Get_Word_With(letter, self.nouns).capitalize()
+    def get_noun(self, letter):
+        return self.get_word_with(letter, self.nouns).capitalize()
 
-    def Get_Color(self):
+    def get_color(self):
         return choice(self.colors)
 
-    def Generate_An_Imp(self):
+    def generate_an_imp(self):
         name = (
-            self.Get_Upper_Letter()
-            + self.Get_Letter()
-            + self.Get_Letter()
-            + self.Get_IO()
+            self.get_upper_letter()
+            + self.get_letter()
+            + self.get_letter()
+            + self.get_io()
         )
-        letter = self.Get_Letter()
+        letter = self.get_letter()
         transform = (
-            f"{self.Get_Adj(letter)}! {self.Get_Flav(letter)}! {self.Get_Noun(letter)}!"
+            f"{self.get_adj(letter)}! {self.get_flav(letter)}! {self.get_noun(letter)}!"
         )
-        pronouns = self.Get_Pronouns()
-        color = self.Get_Color()
+        pronouns = self.get_pronouns()
+        color = self.get_color()
         return Imp(name, transform, pronouns, color)
 
-    def Export_An_Imp(self, export_imp: Imp):
-        exportPath = self.settings.getImpsSave()
+    def export_an_imp(self, export_imp: Imp):
+        exportPath = self.settings.get_imps_save()
         with open(exportPath, "a+") as f:
             f.write(
                 f"{export_imp.name},{export_imp.transform},{export_imp.pronouns},{export_imp.color}\n"
             )
 
 
-def Run_StandAlone():
+def run_standAlone():
     generator = ImpGenerator()
     global imp
-    imp = generator.Generate_An_Imp()
+    imp = generator.generate_an_imp()
     root = tkinter.Tk()
     root.title("Imp Generator")
     textWidth = 45
     labelPaddingY = (10, 0)
     padding = 10
 
-    def regenImp():
+    def regen_imp():
         global imp
-        imp = generator.Generate_An_Imp()
+        imp = generator.generate_an_imp()
         textName.delete(1.0, END)
         textName.insert(tkinter.END, imp.name)
         textTransform.delete(1.0, END)
@@ -102,8 +102,8 @@ def Run_StandAlone():
         textColor.insert(tkinter.END, imp.color)
         buttonExport["state"] = "normal"
 
-    def exportImp():
-        generator.Export_An_Imp(imp)
+    def export_imp():
+        generator.export_an_imp(imp)
         buttonExport["state"] = "disabled"
 
     labelName = Label(root, text="Name")
@@ -126,9 +126,9 @@ def Run_StandAlone():
     textColor = Text(root, height=1, width=textWidth)
     textColor.pack(padx=padding)
 
-    buttonRegen = tkinter.Button(root, text="Regenerate", command=regenImp)
+    buttonRegen = tkinter.Button(root, text="Regenerate", command=regen_imp)
     buttonRegen.pack(pady=padding, padx=padding, in_=root, side=LEFT)
-    buttonExport = tkinter.Button(root, text="Export", command=exportImp)
+    buttonExport = tkinter.Button(root, text="Export", command=export_imp)
     buttonExport.pack(pady=padding, padx=padding, in_=root, side=LEFT)
     buttonExit = Button(root, text="Exit", command=root.destroy)
     buttonExit.pack(pady=padding, padx=padding, in_=root, side=LEFT)
@@ -142,4 +142,4 @@ def Run_StandAlone():
 
 
 if __name__ == "__main__":
-    Run_StandAlone()
+    run_standAlone()

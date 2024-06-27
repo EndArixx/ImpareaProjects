@@ -14,14 +14,14 @@ class EpisodeCollector:
 
     def __init__(self):
         self.settings = tools.Settings()
-        self.image_file_type = self.settings.getImageFormat()
+        self.image_file_type = self.settings.get_image_format()
         self.slice_half_folder_name = "Slice-Half"
         self.slice_Quarter_folder_name = "Slice-Quarter"
         self.transform_folder_name = "Transforms"
         self.uncensored_folder_name = "(U)"
         self.square_half_folder_name = "Square-Half"
         self.square_Quarter_folder_name = "Square-Quarter"
-        self.comic_dir = self.settings.getComicDir()
+        self.comic_dir = self.settings.get_comic_dir()
         self.png_dir = f"{self.comic_dir}\\PNGs\\"
         self.pages_dir = f"{self.comic_dir}\\Pages\\"
         self.pages_files = [
@@ -34,7 +34,7 @@ class EpisodeCollector:
             for x in os.walk(self.png_dir)
             for y in glob(os.path.join(x[0], "*{}".format(self.image_file_type)))
         ]
-        self.transforms = tools.openfile(self.settings.getTransformSave())
+        self.transforms = tools.open_file(self.settings.get_transforms_save())
 
     class coordinate:
         def __init__(self, left, top, right, bottom):
@@ -43,7 +43,7 @@ class EpisodeCollector:
             self.right = right
             self.bottom = bottom
 
-    def deleteExisting(self):
+    def delete_existing(self):
         for remove_path in self.remove_files:
             print("deleting:{}".format(remove_path.split("\\")[-1]))
             instahalf = (
@@ -108,7 +108,7 @@ class EpisodeCollector:
             if image_destination != "ERROR":
                 shutil.copy(image_path, image_destination)
 
-    def Slice_Transform(self, files, folder):
+    def slice_transform(self, files, folder):
         print("Slicing Transforms")
         self.if_not_exist_make_folder(folder)
         for image_path in files:
@@ -128,7 +128,7 @@ class EpisodeCollector:
                         print(f"Saving:{file}")
                         panel.save(file)
 
-    def Slice(self, files, folder, square=False, quarter=False):
+    def slice(self, files, folder, square=False, quarter=False):
         print("Slicing Files")
         self.if_not_exist_make_folder(folder)
         for image_path in files:
@@ -156,7 +156,7 @@ class EpisodeCollector:
                     print(f"Saving:{file}")
                     panel.save(file)
 
-    def CleanUp(self):
+    def cleanup(self):
         for folder in glob(f"{self.png_dir}*\\"):
             if len(os.listdir(folder)) == 0:
                 print(f"Removing Empty Directory: {folder.split('\\')[-2]}")
@@ -165,14 +165,14 @@ class EpisodeCollector:
     def execute(self, Mode=""):
         self.copy_stuff(self.pages_files)
         if MODE_SLICE in Mode:
-            self.Slice(self.pages_files, self.slice_Quarter_folder_name, quarter=True)
-            self.Slice(self.pages_files, self.slice_half_folder_name)
+            self.slice(self.pages_files, self.slice_Quarter_folder_name, quarter=True)
+            self.slice(self.pages_files, self.slice_half_folder_name)
         if MODE_TRANSFORM in Mode:
-            self.Slice_Transform(self.pages_files, self.transform_folder_name)
+            self.slice_transform(self.pages_files, self.transform_folder_name)
         if MODE_SQUARE in Mode:
-            self.Slice(self.pages_files, self.square_Quarter_folder_name, True, True)
-            self.Slice(self.pages_files, self.square_half_folder_name, True)
-        self.CleanUp()
+            self.slice(self.pages_files, self.square_Quarter_folder_name, True, True)
+            self.slice(self.pages_files, self.square_half_folder_name, True)
+        self.cleanup()
 
 
 if __name__ == "__main__":

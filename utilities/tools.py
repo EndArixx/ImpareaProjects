@@ -3,7 +3,7 @@ from tkinter import messagebox
 from pathlib import Path
 
 
-def openfile(str):
+def open_file(str):
     return open(str, "r").read().split("\n")
 
 
@@ -26,38 +26,38 @@ class Settings:
         self.settingLocation = Path.home() / "AppData/Roaming/ImpProjects"
         self.settingsFile = self.settingLocation / "settings"
         self.data = {}
-        self.loadSettings()
-        self.in_debug_Mode = self.getSettingIsOn(Keys.DebugMode)
+        self.load_settings()
+        self.in_debug_Mode = self.get_setting_is_on(Keys.DebugMode)
 
     def print_debug(self, str):
-        if self.getSettingIsOn(Keys.DebugMode):
+        if self.get_setting_is_on(Keys.DebugMode):
             print(f"{str}")
 
-    def getSetting(self, key):
+    def get_setting(self, key):
         if key in self.data:
             return self.data[key]
         else:
             return ""
 
-    def getSettingIsOn(self, key):
-        setting = self.getSetting(key)
+    def get_setting_is_on(self, key):
+        setting = self.get_setting(key)
         if setting.lower() == "yes":
             return True
         else:
             return False
 
-    def setSetting(self, key: str, value: str):
+    def set_setting(self, key: str, value: str):
         self.data[key] = value
         self.print_debug(f"Adding: {key} : {value}")
-        self.saveSettings()
+        self.save_settings()
 
-    def loadSettings(self):
+    def load_settings(self):
 
         # Ensure file exists if not create a new one.
         if_not_exist_make_folder(self.settingLocation)
         if Path(self.settingsFile).is_file():
             i = 0
-            for s in openfile(self.settingsFile):
+            for s in open_file(self.settingsFile):
                 setting = s.strip().split(",")
                 if len(setting) == 2:
                     self.data[setting[0]] = setting[1]
@@ -69,50 +69,53 @@ class Settings:
             response = messagebox.askquestion(
                 "DebugMode", "Would you like to turn on 'Debug Mode'?"
             )
-            self.setSetting(Keys.DebugMode, response)
+            self.set_setting(Keys.DebugMode, response)
 
-        if Keys.ComicFolder not in self.data or not Path(self.getComicDir()).is_dir():
+        if Keys.ComicFolder not in self.data or not Path(self.get_comic_dir()).is_dir():
             url = askdirectory(title="Select Comic Root")
             if len(url) > 0:
-                self.setSetting(Keys.ComicFolder, url)
+                self.set_setting(Keys.ComicFolder, url)
 
-        if Keys.ImpsSave not in self.data or not Path(self.getImpsSave()).is_file():
+        if Keys.ImpsSave not in self.data or not Path(self.get_imps_save()).is_file():
             url = askopenfilename(
                 title="Select Imps File", filetypes=[("CSV files", "*.csv")]
             )
             if url:
-                self.setSetting(Keys.ImpsSave, url)
+                self.set_setting(Keys.ImpsSave, url)
 
         if (
             Keys.TransformsSave not in self.data
-            or not Path(self.getTransformSave()).is_file()
+            or not Path(self.get_transforms_save()).is_file()
         ):
             url = askopenfilename(
                 title="Select Transforms File", filetypes=[("CSV files", "*.csv")]
             )
             if url:
-                self.setSetting(Keys.TransformsSave, url)
+                self.set_setting(Keys.TransformsSave, url)
 
         if Keys.ImageExtention not in self.data:
-            self.setSetting(Keys.ImageExtention, ".png")
+            self.set_setting(Keys.ImageExtention, ".png")
 
         self.print_debug(f"Loaded: {self.settingsFile}\nSettings: {str(self.data)}")
 
-    def saveSettings(self):
+    def save_settings(self):
         with open(self.settingsFile, "w") as f:
             for k, v in self.data.items():
                 if k and v:
                     self.print_debug(f"Writing: {k},{v}\n")
                     f.write(f"{k},{v}\n")
 
-    def getComicDir(self):
-        return self.getSetting(Keys.ComicFolder)
+    #TODO 
+    # def edit_settings(self): 
 
-    def getImageFormat(self):
-        return self.getSetting(Keys.ImageExtention)
+    def get_comic_dir(self):
+        return self.get_setting(Keys.ComicFolder)
 
-    def getImpsSave(self):
-        return self.getSetting(Keys.ImpsSave)
+    def get_image_format(self):
+        return self.get_setting(Keys.ImageExtention)
 
-    def getTransformSave(self):
-        return self.getSetting(Keys.TransformsSave)
+    def get_imps_save(self):
+        return self.get_setting(Keys.ImpsSave)
+
+    def get_transforms_save(self):
+        return self.get_setting(Keys.TransformsSave)

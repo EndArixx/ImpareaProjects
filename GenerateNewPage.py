@@ -7,7 +7,7 @@ import utilities.tools as tools
 import re
 
 settings = tools.Settings()
-comic_dir = Path(settings.getComicDir())
+comic_dir = Path(settings.get_comic_dir())
 pages_dir = comic_dir / "Pages"
 
 

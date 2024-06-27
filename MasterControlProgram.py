@@ -262,8 +262,8 @@ def file_zone(frame):
         create_exe_button["state"] = "normal"
 
     def open_comic_folder():
-        print(settings.getComicDir())
-        os.startfile(settings.getComicDir())
+        print(settings.get_comic_dir())
+        os.startfile(settings.get_comic_dir())
 
     def create_exe():
         def run_thread():
