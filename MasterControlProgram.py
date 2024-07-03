@@ -7,7 +7,7 @@ import threading
 
 
 
-VERSION = "v0.2.2"
+VERSION = "v0.2.3"
 settings = tools.Settings()
 #Load Styles
 PROGRAM_NAME = settings.get_program_name()
