@@ -2,87 +2,30 @@ import sys
 import tkinter as tk
 import PyInstaller.__main__
 from CollectEpisodes import *
-import GenerateNewPage as gnp
+from GenerateNewPage import *
 import threading
 
 
-VERSION = "v0.2.1"
-PROGRAM_NAME = "Imparean Solutions"
-PRIMARY_TEXT_COLOR = "black"
-PRIMARY_COLOR = "MediumSpringGreen"
-INPUT_COLOR = "white"
-ACCENT_COLOR = "plum"
-WARNING_COLOR = "crimson"
-WARNING_TEXT_COLOR = "white"
-CLEAR_COLOR = "snow"
-HEADER_FONT = "Handlee 14 bold"
-TEXT_FONT = "Courier 12"
-PADDING = 5
+
+VERSION = "v0.2.2"
 settings = tools.Settings()
-
-
-class App(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.wm_attributes("-transparentcolor", CLEAR_COLOR)
-        self.title("Imparea Comic Utilities")
-        self.configure(background=CLEAR_COLOR)
-        self.minsize(600, 0)
-        self.overrideredirect(1)
-        self.attributes("-topmost", True)
-        self.grid_columnconfigure(0, weight=1)
-
-    def startMove(self, event):
-        self.x = event.x
-        self.y = event.y
-
-    def stopMove(self, event):
-        self.x = None
-        self.y = None
-
-    def moving(self, event):
-        x = event.x_root - self.x
-        y = event.y_root - self.y
-        self.geometry("+%s+%s" % (x, y))
-
-    def exit(self):
-        self.destroy()
-
-
-def menu_zone(frame, root):
-    frame.bind("<Button-1>", root.startMove)
-    frame.bind("<ButtonRelease-1>", root.stopMove)
-    frame.bind("<B1-Motion>", root.moving)
-
-    frame.grid_columnconfigure(0, weight=1)
-    frame.grid_columnconfigure(1, weight=0)
-
-    label = tk.Label(
-        frame,
-        text=f"{PROGRAM_NAME} - {VERSION}",
-        foreground=PRIMARY_COLOR,
-        background=PRIMARY_TEXT_COLOR,
-        font=HEADER_FONT,
-    )
-    label.bind("<Button-1>", root.startMove)
-    label.bind("<ButtonRelease-1>", root.stopMove)
-    label.bind("<B1-Motion>", root.moving)
-    label.grid(column=0, row=0, columnspan=2, sticky="ew")
-
-    exit_button = tk.Button(
-        frame,
-        text="✕",
-        command=root.destroy,
-        background=PRIMARY_TEXT_COLOR,
-        foreground=PRIMARY_COLOR,
-        font=HEADER_FONT,
-    )
-    exit_button.grid(row=0, column=1, sticky="e")
+#Load Styles
+PROGRAM_NAME = settings.get_program_name()
+PRIMARY_TEXT_COLOR = settings.get_style_primaytextcolor()
+PRIMARY_COLOR = settings.get_style_primarycolor()
+INPUT_COLOR = settings.get_style_inputcolor()
+ACCENT_COLOR = settings.get_style_accentcolor()
+WARNING_COLOR = settings.get_style_warningcolor()
+WARNING_TEXT_COLOR = settings.get_style_warningtextcolor()
+CLEAR_COLOR = settings.get_style_clearcolor()
+HEADER_FONT = settings.get_style_headerfont()
+TEXT_FONT = settings.get_style_textfont()
+PADDING = settings.get_style_padding()
 
 
 def generate_page_zone(frame):
     pagetitle_var = tk.StringVar(frame, "")
-
+    gnp = PageGenerator(settings)
     def gen():
         title = pagetitle_var.get()
 
@@ -153,7 +96,7 @@ def generate_page_zone(frame):
 
 
 def collect_episodes_zone(frame):
-    episode_collector = EpisodeCollector()
+    episode_collector = EpisodeCollector(settings)
     for i in range(2):
         frame.grid_columnconfigure(i, weight=1)
         frame.grid_rowconfigure(i, weight=1)
@@ -301,7 +244,7 @@ def file_zone(frame):
         font=TEXT_FONT,
     )
     create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
-    if not settings.in_debug_Mode or "\python.exe" not in sys.executable:
+    if not settings.in_debug_Mode or "\\python.exe" not in sys.executable:
         create_exe_button.grid_remove()
 
     warning_label = tk.Label(
@@ -315,36 +258,23 @@ def file_zone(frame):
     warning_label.grid_remove()
 
 
-def setup_frame(root, row=0, column=0, sticky="new", color=CLEAR_COLOR):
-    frame = tk.Frame(root, background=color)
-    frame.grid(column=column, row=row, sticky=sticky)
-    return frame
-
-
 def execute_primary_function():
     # Create the main window
-    root = App()
-    i = 0
-
-    # Menu
-    m_frame = setup_frame(root, row=i, column=0, color=PRIMARY_TEXT_COLOR)
-    menu_zone(m_frame, root)
-    i += 1
+    root = tools.ImparianApp(
+        f"{settings.get_program_name()} - {VERSION}", settings
+    )
 
     # Generate New Page
-    gnp_frame = setup_frame(root, row=i, column=0, color=PRIMARY_COLOR)
+    gnp_frame = root.add_frame(color=CLEAR_COLOR)
     generate_page_zone(gnp_frame)
-    i += 1
 
     # Collect Episodes
-    ce_frame = setup_frame(root, row=i, column=0, color=CLEAR_COLOR)
+    ce_frame = root.add_frame(color=CLEAR_COLOR)
     collect_episodes_zone(ce_frame)
-    i += 1
 
     # File zone
-    fz_frame = setup_frame(root, row=i, column=0, color=CLEAR_COLOR)
+    fz_frame = root.add_frame(color=CLEAR_COLOR)
     file_zone(fz_frame)
-    i += 1
 
     # execute the GUI
     root.mainloop()

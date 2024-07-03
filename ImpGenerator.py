@@ -18,8 +18,10 @@ class Imp:
 
 
 class ImpGenerator:
-    def __init__(self):
-        self.settings = tools.Settings()
+    def __init__(self, settings= None):
+        if settings is None:
+            settings = tools.Settings()
+        self.settings = settings
         self.flavors = tools.open_file("data/flavors.csv")
         self.adjectives = tools.open_file("data/adjectives.csv")
         self.nouns = tools.open_file("data/nouns.csv")
@@ -80,11 +82,13 @@ class ImpGenerator:
 
 
 def run_standAlone():
-    generator = ImpGenerator()
+    settings = tools.Settings()
+    generator = ImpGenerator(settings)
     global imp
     imp = generator.generate_an_imp()
-    root = tkinter.Tk()
-    root.title("Imp Generator")
+    app = tools.ImparianApp("Imp Generator", settings)
+    app.title("Imp Generator")
+    root = app.add_frame(row=1, color=settings.get_style_primarycolor())
     textWidth = 45
     labelPaddingY = (10, 0)
     padding = 10
@@ -130,8 +134,6 @@ def run_standAlone():
     buttonRegen.pack(pady=padding, padx=padding, in_=root, side=LEFT)
     buttonExport = tkinter.Button(root, text="Export", command=export_imp)
     buttonExport.pack(pady=padding, padx=padding, in_=root, side=LEFT)
-    buttonExit = Button(root, text="Exit", command=root.destroy)
-    buttonExit.pack(pady=padding, padx=padding, in_=root, side=LEFT)
 
     textName.insert(tkinter.END, imp.name)
     textTransform.insert(tkinter.END, imp.transform)

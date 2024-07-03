@@ -12,8 +12,10 @@ MODE_SQUARE = "q"
 
 class EpisodeCollector:
 
-    def __init__(self):
-        self.settings = tools.Settings()
+    def __init__(self, settings= None):
+        if settings == None:
+            settings = tools.Settings()
+        self.settings = settings
         self.image_file_type = self.settings.get_image_format()
         self.slice_half_folder_name = "Slice-Half"
         self.slice_Quarter_folder_name = "Slice-Quarter"
