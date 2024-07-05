@@ -128,10 +128,10 @@ def run_standAlone():
     textColor = settings.text(root, height=1, width=textWidth)
     textColor.pack(padx=padding)
 
-    buttonRegen = settings.button(root, text="Regenerate", command=regen_imp)
-    buttonRegen.pack(pady=padding, padx=padding, in_=root, side="left")
-    buttonExport = settings.button(root, text="Export", command=export_imp)
-    buttonExport.pack(pady=padding, padx=padding, in_=root, side="left")
+    buttonRegen = settings.button(root, text="Regenerate", command=regen_imp, background=settings.get_style_accentcolor())
+    buttonRegen.pack(pady=padding, padx=padding, in_=root)
+    buttonExport = settings.button(root, text="Export", command=export_imp, background=settings.get_style_accentcolor())
+    buttonExport.pack(pady=padding, padx=padding, in_=root)
 
     textName.insert("end", imp.name)
     textTransform.insert("end", imp.transform)

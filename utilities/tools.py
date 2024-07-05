@@ -238,7 +238,7 @@ class Settings:
             state="normal",
             background=self.get_style_accentcolor(),
         )
-        reset_button.grid(column=0, row=i, sticky="e", padx=padding, pady=padding)
+        reset_button.grid(column=0, row=i, sticky="w", padx=padding, pady=padding)
 
         save_button = self.button(
             frame,
