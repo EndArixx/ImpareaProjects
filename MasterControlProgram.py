@@ -6,12 +6,11 @@ from GenerateNewPage import *
 import threading
 
 
-
-VERSION = "v0.2.2"
+VERSION = "v0.2.3"
 settings = tools.Settings()
-#Load Styles
+# Load Styles
 PROGRAM_NAME = settings.get_program_name()
-PRIMARY_TEXT_COLOR = settings.get_style_primaytextcolor()
+PRIMARY_TEXT_COLOR = settings.get_style_primarytextcolor()
 PRIMARY_COLOR = settings.get_style_primarycolor()
 INPUT_COLOR = settings.get_style_inputcolor()
 ACCENT_COLOR = settings.get_style_accentcolor()
@@ -26,6 +25,7 @@ PADDING = settings.get_style_padding()
 def generate_page_zone(frame):
     pagetitle_var = tk.StringVar(frame, "")
     gnp = PageGenerator(settings)
+
     def gen():
         title = pagetitle_var.get()
 
@@ -35,7 +35,7 @@ def generate_page_zone(frame):
                 message=f"Are you sure you wish to generate\n'{gnp.get_next_pagenumber()} {pagetitle_var.get()}'",
             )
             if result:
-                gnp.generate_new_page(pagetitle_var.get())
+                gnp.generate_new_page(title)
                 pagetitle_var.set("")
 
         else:
@@ -43,7 +43,7 @@ def generate_page_zone(frame):
                 title="Error", message=f"'{title}' is not a valid title."
             )
 
-    def enable_gen(var, index, mode):
+    def enable_gen(*args):
         if pagetitle_var.get():
             generatepage_button["state"] = "normal"
         else:
@@ -54,43 +54,32 @@ def generate_page_zone(frame):
     frame.grid_columnconfigure(0, weight=0)
     frame.grid_columnconfigure(1, weight=1)
 
-    zone_label = tk.Label(
+    zone_label = settings.label(
         frame,
         text="Generate New Page",
-        foreground=PRIMARY_TEXT_COLOR,
-        background=PRIMARY_COLOR,
-        font=TEXT_FONT,
     )
     zone_label.grid(
         column=0, row=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING
     )
 
-    pagetitle_label = tk.Label(
+    pagetitle_label = settings.label(
         frame,
         text="Page Title:",
-        foreground=PRIMARY_TEXT_COLOR,
-        background=PRIMARY_COLOR,
-        font=TEXT_FONT,
     )
     pagetitle_label.grid(column=0, row=1, sticky="w", padx=PADDING, pady=PADDING)
 
-    pagetitle_entry = tk.Entry(
+    pagetitle_entry = settings.entry(
         frame,
-        foreground=PRIMARY_TEXT_COLOR,
-        background=INPUT_COLOR,
-        font=TEXT_FONT,
         textvariable=pagetitle_var,
     )
     pagetitle_entry.grid(column=1, row=1, sticky="we", padx=PADDING, pady=PADDING)
 
-    generatepage_button = tk.Button(
+    generatepage_button = settings.button(
         frame,
         text="Generate new Page",
         command=gen,
         state="disable",
         background=ACCENT_COLOR,
-        foreground=PRIMARY_TEXT_COLOR,
-        font=TEXT_FONT,
     )
     generatepage_button.grid(column=2, row=1, sticky="e", padx=PADDING, pady=PADDING)
 
@@ -137,47 +126,35 @@ def collect_episodes_zone(frame):
         square_button["state"] = "normal"
         transforms_button["state"] = "normal"
 
-    collect_button = tk.Button(
+    collect_button = settings.button(
         frame,
         text="Collect Episodes",
         command=collect_episodes,
-        foreground=PRIMARY_TEXT_COLOR,
-        background=PRIMARY_COLOR,
-        font=TEXT_FONT,
     )
     collect_button.grid(row=0, column=0, padx=PADDING, pady=PADDING, sticky="we")
 
-    transforms_button = tk.Button(
+    transforms_button = settings.button(
         frame,
         text="Collect Transform",
         command=collect_transforms,
-        foreground=PRIMARY_TEXT_COLOR,
-        background=PRIMARY_COLOR,
-        font=TEXT_FONT,
     )
     transforms_button.grid(row=0, column=1, padx=PADDING, pady=PADDING, sticky="we")
 
-    slice_button = tk.Button(
+    slice_button = settings.button(
         frame,
         text="Slice Episodes",
         command=slice_episodes,
-        foreground=PRIMARY_TEXT_COLOR,
-        background=PRIMARY_COLOR,
-        font=TEXT_FONT,
     )
     slice_button.grid(row=1, column=0, padx=PADDING, pady=PADDING, sticky="we")
 
-    square_button = tk.Button(
+    square_button = settings.button(
         frame,
         text="Square Episodes",
         command=square_episodes,
-        foreground=PRIMARY_TEXT_COLOR,
-        background=PRIMARY_COLOR,
-        font=TEXT_FONT,
     )
     square_button.grid(row=1, column=1, padx=PADDING, pady=PADDING, sticky="we")
 
-    warning_label = tk.Label(
+    warning_label = settings.label(
         frame,
         text="Executing Collection",
         foreground=WARNING_TEXT_COLOR,
@@ -225,29 +202,23 @@ def file_zone(frame):
         thread = threading.Thread(target=run_thread, args=())
         thread.start()
 
-    open_comic_button = tk.Button(
+    open_comic_button = settings.button(
         frame,
         text="Open Comic Folder",
         command=open_comic_folder,
-        background=PRIMARY_TEXT_COLOR,
-        foreground=PRIMARY_COLOR,
-        font=TEXT_FONT,
     )
     open_comic_button.grid(row=0, column=0, sticky="w", padx=PADDING, pady=PADDING)
 
-    create_exe_button = tk.Button(
+    create_exe_button = settings.button(
         frame,
         text="Create Executable",
         command=create_exe,
-        background=PRIMARY_TEXT_COLOR,
-        foreground=PRIMARY_COLOR,
-        font=TEXT_FONT,
     )
     create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
     if not settings.in_debug_Mode or "\\python.exe" not in sys.executable:
         create_exe_button.grid_remove()
 
-    warning_label = tk.Label(
+    warning_label = settings.label(
         frame,
         text="Creating Executable",
         foreground=WARNING_TEXT_COLOR,
@@ -260,9 +231,7 @@ def file_zone(frame):
 
 def execute_primary_function():
     # Create the main window
-    root = tools.ImparianApp(
-        f"{settings.get_program_name()} - {VERSION}", settings
-    )
+    root = tools.ImparianApp(f"{settings.get_program_name()} - {VERSION}", settings, True)
 
     # Generate New Page
     gnp_frame = root.add_frame(color=CLEAR_COLOR)
