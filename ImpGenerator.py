@@ -1,9 +1,7 @@
 from random import *
 import random
 import string
-import tkinter
 import utilities.tools as tools
-from tkinter import *
 
 
 class Imp:
@@ -18,7 +16,7 @@ class Imp:
 
 
 class ImpGenerator:
-    def __init__(self, settings= None):
+    def __init__(self, settings=None):
         if settings is None:
             settings = tools.Settings()
         self.settings = settings
@@ -89,56 +87,56 @@ def run_standAlone():
     app = tools.ImparianApp("Imp Generator", settings)
     app.title("Imp Generator")
     root = app.add_frame(row=1, color=settings.get_style_primarycolor())
-    textWidth = 45
+    textWidth = 35
     labelPaddingY = (10, 0)
     padding = 10
 
     def regen_imp():
         global imp
         imp = generator.generate_an_imp()
-        textName.delete(1.0, END)
-        textName.insert(tkinter.END, imp.name)
-        textTransform.delete(1.0, END)
-        textTransform.insert(tkinter.END, imp.transform)
-        textPronouns.delete(1.0, END)
-        textPronouns.insert(tkinter.END, imp.pronouns)
-        textColor.delete(1.0, END)
-        textColor.insert(tkinter.END, imp.color)
+        textName.delete(1.0, "end")
+        textName.insert("end", imp.name)
+        textTransform.delete(1.0, "end")
+        textTransform.insert("end", imp.transform)
+        textPronouns.delete(1.0, "end")
+        textPronouns.insert("end", imp.pronouns)
+        textColor.delete(1.0, "end")
+        textColor.insert("end", imp.color)
         buttonExport["state"] = "normal"
 
     def export_imp():
         generator.export_an_imp(imp)
         buttonExport["state"] = "disabled"
 
-    labelName = Label(root, text="Name")
+    labelName = settings.label(root, text="Name", font=settings.get_style_headerfont())
     labelName.pack(pady=labelPaddingY)
-    textName = Text(root, height=1, width=textWidth)
+    textName = settings.text(root, height=1, width=textWidth)
     textName.pack(padx=padding)
 
-    labelTransform = Label(root, text="Transform")
+    labelTransform = settings.label(root, text="Transform", font=settings.get_style_headerfont())
     labelTransform.pack(pady=labelPaddingY)
-    textTransform = Text(root, height=1, width=textWidth)
+    textTransform = settings.text(root, height=1, width=textWidth)
     textTransform.pack(padx=padding)
 
-    labelPronouns = Label(root, text="Pronouns")
+    labelPronouns = settings.label(root, text="Pronouns", font=settings.get_style_headerfont())
     labelPronouns.pack(pady=labelPaddingY)
-    textPronouns = Text(root, height=1, width=textWidth)
+    textPronouns = settings.text(root, height=1, width=textWidth)
     textPronouns.pack(padx=padding)
 
-    labelColor = Label(root, text="Color")
+    labelColor = settings.label(root, text="Color", font= settings.get_style_headerfont())
     labelColor.pack(pady=labelPaddingY)
-    textColor = Text(root, height=1, width=textWidth)
+    textColor = settings.text(root, height=1, width=textWidth)
     textColor.pack(padx=padding)
 
-    buttonRegen = tkinter.Button(root, text="Regenerate", command=regen_imp)
-    buttonRegen.pack(pady=padding, padx=padding, in_=root, side=LEFT)
-    buttonExport = tkinter.Button(root, text="Export", command=export_imp)
-    buttonExport.pack(pady=padding, padx=padding, in_=root, side=LEFT)
+    buttonRegen = settings.button(root, text="Regenerate", command=regen_imp)
+    buttonRegen.pack(pady=padding, padx=padding, in_=root, side="left")
+    buttonExport = settings.button(root, text="Export", command=export_imp)
+    buttonExport.pack(pady=padding, padx=padding, in_=root, side="left")
 
-    textName.insert(tkinter.END, imp.name)
-    textTransform.insert(tkinter.END, imp.transform)
-    textPronouns.insert(tkinter.END, imp.pronouns)
-    textColor.insert(tkinter.END, imp.color)
+    textName.insert("end", imp.name)
+    textTransform.insert("end", imp.transform)
+    textPronouns.insert("end", imp.pronouns)
+    textColor.insert("end", imp.color)
 
     root.mainloop()
 

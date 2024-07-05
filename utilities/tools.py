@@ -1,5 +1,4 @@
 import tkinter as tk
-from tkinter import font
 from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter import messagebox
 from pathlib import Path
@@ -46,6 +45,8 @@ class Settings:
         if self.get_setting_is_on(Keys.DEBUG_MODE):
             print(f"{str}")
 
+    # region Settings controls
+
     def get_setting(self, key):
         if key in self.data:
             return self.data[key]
@@ -63,6 +64,23 @@ class Settings:
         self.data[key] = value
         self.print_debug(f"Adding: {key} : {value}")
         self.save_settings()
+
+    def save_settings(self):
+        with open(self.settingsFile, "w") as f:
+            for k, v in self.data.items():
+                if k and v:
+                    self.print_debug(f"Writing: {k},{v}\n")
+                    f.write(f"{k},{v}\n")
+
+    def open_settings(self):
+        root = ImparianApp("Settings", self)
+        
+        grid = root.add_frame(color=self.get_style_primarycolor())
+        self.setting_grid(grid)
+
+        root.mainloop()
+
+    # endregion
 
     # region Load settings
 
@@ -86,7 +104,10 @@ class Settings:
             )
             self.set_setting(Keys.DEBUG_MODE, response)
 
-        if Keys.COMIC_FOLDER not in self.data or not Path(self.get_comic_dir()).is_dir():
+        if (
+            Keys.COMIC_FOLDER not in self.data
+            or not Path(self.get_comic_dir()).is_dir()
+        ):
             url = askdirectory(title="Select Comic Root")
             if len(url) > 0:
                 self.set_setting(Keys.COMIC_FOLDER, url)
@@ -148,16 +169,174 @@ class Settings:
 
     # endregion
 
-    def save_settings(self):
-        with open(self.settingsFile, "w") as f:
-            for k, v in self.data.items():
-                if k and v:
-                    self.print_debug(f"Writing: {k},{v}\n")
-                    f.write(f"{k},{v}\n")
+    # region Widget Overrides
 
-    def edit_settings(self):
-        root = ImparianApp("Settings", self)
-        root.mainloop()
+    def setting_grid(self, frame):
+        #TODO: ADD SCROLL BAR TO SIDE!
+        i=0
+        labels= []
+        textvariables=[]
+        entries= []
+        padding= self.get_style_padding()
+        frame.grid_columnconfigure(0, weight=0)
+        frame.grid_columnconfigure(1, weight=1)
+
+        def validate_data():
+            #TODO add validation!
+            altered = False
+            for j in range(len(textvariables)):
+                k = labels[j].cget("text")
+                v = textvariables[j].get()
+                if v != self.data[k]:
+                    entries[j].configure({"background": self.get_style_accentcolor()})
+                    altered= True
+                else:
+                    entries[j].configure({"background": self.get_style_inputcolor()})
+
+            return altered
+
+        def enable_save(*args):
+            if validate_data():
+                save_button["state"] = "normal"
+            else:
+                save_button["state"] = "disable"
+
+        def save():
+            result = tk.messagebox.askyesno(
+                title="Save Settings",
+                message=f"Are you sure you wish to Save Settings?",
+            )
+            if result:
+                for j in range(len(textvariables)):
+                    k = labels[j].cget("text")
+                    v = textvariables[j].get()
+                    if v != self.data[k]:
+                        self.data[k] = v
+                self.save_settings()
+                validate_data()
+
+        for k, v in self.data.items():
+            #TODO: Add support for different kinds of inputs:
+            #   [] Yes/no
+            #   [] File/folder location/name
+            labels.append(self.label(frame, k))
+            labels[i].grid(row=i, column=0, sticky="w", padx=padding, pady=padding)
+            textvariables.append(tk.StringVar(frame, v))
+            textvariables[i].trace_add("write", enable_save)
+            entries.append(self.entry(frame,textvariables[i]))
+            entries[i].grid(row=i, column=1, sticky="ew", padx=padding, pady=padding)            
+            i+=1
+
+        def reset():
+            for j in range(len(textvariables)):
+                textvariables[j].set(self.data[labels[j].cget("text")])
+
+        reset_button = self.button(
+            frame,
+            text="Reset",
+            command=reset,
+            state="normal",
+            background=self.get_style_accentcolor(),
+        )
+        reset_button.grid(column=0, row=i, sticky="e", padx=padding, pady=padding)
+
+        save_button = self.button(
+            frame,
+            text="Save Settings",
+            command=save,
+            state="disable",
+            background=self.get_style_accentcolor(),
+        )
+        save_button.grid(column=1, row=i, sticky="e", padx=padding, pady=padding)
+
+
+        
+
+
+    def button(
+        self,
+        root,
+        text,
+        command,
+        foreground=None,
+        background=None,
+        font=None,
+        state="normal",
+    ):
+        if foreground is None:
+            foreground = self.get_style_primarytextcolor()
+        if background is None:
+            background = self.get_style_primarycolor()
+        if font is None:
+            font = self.get_style_textfont()
+        return tk.Button(
+            root,
+            text=text,
+            command=command,
+            foreground=foreground,
+            background=background,
+            font=font,
+            state=state,
+        )
+
+    def label(self, root, text, foreground=None, background=None, font=None):
+        if foreground is None:
+            foreground = self.get_style_primarytextcolor()
+        if background is None:
+            background = self.get_style_primarycolor()
+        if font is None:
+            font = self.get_style_textfont()
+        return tk.Label(
+            root,
+            text=text,
+            foreground=foreground,
+            background=background,
+            font=font,
+        )
+
+    def entry(
+        self,
+        root,
+        textvariable,
+        foreground=None,
+        background=None,
+        font=None,
+        text="",
+        state="normal",
+    ):
+        if foreground is None:
+            foreground = self.get_style_primarytextcolor()
+        if background is None:
+            background = self.get_style_inputcolor()
+        if font is None:
+            font = self.get_style_textfont()
+        return tk.Entry(
+            root,
+            text=text,
+            textvariable=textvariable,
+            foreground=foreground,
+            background=background,
+            font=font,
+            state=state,
+        )
+
+    def text(self, root, width, height, foreground=None, background=None, font=None):
+        if foreground is None:
+            foreground = self.get_style_primarytextcolor()
+        if background is None:
+            background = self.get_style_inputcolor()
+        if font is None:
+            font = self.get_style_textfont()
+        return tk.Text(
+            root,
+            height=height,
+            width=width,
+            foreground=foreground,
+            background=background,
+            font=font,
+        )
+
+    # endregion
 
     # region Specific gets
 
@@ -176,7 +355,7 @@ class Settings:
     def get_program_name(self):
         return self.get_setting(Keys.PROGRAM_NAME)
 
-    def get_style_primaytextcolor(self):
+    def get_style_primarytextcolor(self):
         return self.get_setting(Keys.PRIMARY_TEXT_COLOR)
 
     def get_style_primarycolor(self):
@@ -211,7 +390,7 @@ class Settings:
 
 # region Imparian Base App
 class ImparianApp(tk.Tk):
-    def __init__(self, title: str, settings=None):
+    def __init__(self, title: str, settings=None, has_settings_edit=False):
         super().__init__()
         self.next_row = 0
         if settings == None:
@@ -225,16 +404,14 @@ class ImparianApp(tk.Tk):
         self.attributes("-topmost", True)
         self.grid_columnconfigure(0, weight=1)
 
-        #TODO: Add logic to ovveride the default fonts with the settings fonts.
-        # self.defaultFont = font.nametofont("TkDefaultFont") 
-        # self.defaultFont.configure(family="Segoe Script", 
-        #                            size=19, 
+        # TODO: Add logic to ovveride the default fonts with the settings fonts.
+        # self.defaultFont = font.nametofont("TkDefaultFont")
+        # self.defaultFont.configure(family="Segoe Script",
+        #                            size=19,
         #                            weight=font.BOLD)
 
-        #TODO: overide buttons, labels, inputs... etc so you can apply colors.
-
-        m_frame = self.add_frame(color=settings.get_style_primaytextcolor())
-        self.top_menu(m_frame, title)
+        m_frame = self.add_frame(color=settings.get_style_primarytextcolor())
+        self.top_menu(m_frame, title, has_settings_edit)
 
     def startMove(self, event):
         self.x = event.x
@@ -252,35 +429,46 @@ class ImparianApp(tk.Tk):
     def exit(self):
         self.destroy()
 
-    def top_menu(self, frame, title):
+    def top_menu(self, frame, title, has_settings_edit):
         frame.bind("<Button-1>", self.startMove)
         frame.bind("<ButtonRelease-1>", self.stopMove)
         frame.bind("<B1-Motion>", self.moving)
 
         frame.grid_columnconfigure(0, weight=1)
         frame.grid_columnconfigure(1, weight=0)
+        frame.grid_columnconfigure(2, weight=0)
 
         label = tk.Label(
             frame,
             text=title,
             foreground=self.settings.get_style_primarycolor(),
-            background=self.settings.get_style_primaytextcolor(),
+            background=self.settings.get_style_primarytextcolor(),
             font=self.settings.get_style_headerfont(),
         )
         label.bind("<Button-1>", self.startMove)
         label.bind("<ButtonRelease-1>", self.stopMove)
         label.bind("<B1-Motion>", self.moving)
         label.grid(column=0, row=0, columnspan=2, sticky="ew")
+        if has_settings_edit:
+            setting_button = tk.Button(
+                frame,
+                text="⚙",
+                command=self.settings.open_settings,
+                background=self.settings.get_style_primarytextcolor(),
+                foreground=self.settings.get_style_primarycolor(),
+                font=self.settings.get_style_headerfont(),
+            )
+            setting_button.grid(row=0, column=1, sticky="e")
 
         exit_button = tk.Button(
             frame,
             text="✕",
             command=self.destroy,
-            background=self.settings.get_style_primaytextcolor(),
+            background=self.settings.get_style_primarytextcolor(),
             foreground=self.settings.get_style_primarycolor(),
             font=self.settings.get_style_headerfont(),
         )
-        exit_button.grid(row=0, column=1, sticky="e")
+        exit_button.grid(row=0, column=2, sticky="e")
 
     def add_frame(self, row=-1, column=0, sticky="new", color="White"):
         if row < 0:
@@ -295,4 +483,4 @@ class ImparianApp(tk.Tk):
 
 if __name__ == "__main__":
     settings = Settings()
-    settings.edit_settings()
+    settings.open_settings()
