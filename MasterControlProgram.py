@@ -208,15 +208,13 @@ def file_zone(frame):
         command=open_comic_folder,
     )
     open_comic_button.grid(row=0, column=0, sticky="w", padx=PADDING, pady=PADDING)
-
-    create_exe_button = settings.button(
-        frame,
-        text="Create Executable",
-        command=create_exe,
-    )
-    create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
-    if not settings.in_debug_Mode or "\\python.exe" not in sys.executable:
-        create_exe_button.grid_remove()
+    if not getattr(sys, 'frozen', False) and settings.in_debug_Mode:
+        create_exe_button = settings.button(
+            frame,
+            text="Create Executable",
+            command=create_exe,
+        )
+        create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
 
     warning_label = settings.label(
         frame,
