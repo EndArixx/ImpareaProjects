@@ -20,10 +20,10 @@ class ImpGenerator:
         if settings is None:
             settings = tools.Settings()
         self.settings = settings
-        self.flavors = tools.open_file("data/flavors.csv")
-        self.adjectives = tools.open_file("data/adjectives.csv")
-        self.nouns = tools.open_file("data/nouns.csv")
-        self.colors = tools.open_file("data/colors.csv")
+        self.flavors = tools.load_resource("data/flavors.csv")
+        self.adjectives = tools.load_resource("data/adjectives.csv")
+        self.nouns = tools.load_resource("data/nouns.csv")
+        self.colors = tools.load_resource("data/colors.csv")
         self.alphabet = string.ascii_lowercase
 
     def get_pronouns(self):
@@ -79,14 +79,14 @@ class ImpGenerator:
             )
 
 
-def run_standAlone():
+def run_imp_gen_IU():
     settings = tools.Settings()
     generator = ImpGenerator(settings)
     global imp
     imp = generator.generate_an_imp()
     app = tools.ImparianApp("Imp Generator", settings)
     app.title("Imp Generator")
-    root = app.add_frame(row=1, color=settings.get_style_primarycolor())
+    root = app.add_frame(row=1, background=settings.get_style_primarycolor())
     textWidth = 35
     labelPaddingY = (10, 0)
     padding = 10
@@ -128,10 +128,10 @@ def run_standAlone():
     textColor = settings.text(root, height=1, width=textWidth)
     textColor.pack(padx=padding)
 
-    buttonRegen = settings.button(root, text="Regenerate", command=regen_imp)
-    buttonRegen.pack(pady=padding, padx=padding, in_=root, side="left")
-    buttonExport = settings.button(root, text="Export", command=export_imp)
-    buttonExport.pack(pady=padding, padx=padding, in_=root, side="left")
+    buttonRegen = settings.button(root, text="Regenerate", command=regen_imp, background=settings.get_style_accentcolor())
+    buttonRegen.pack(pady=padding, padx=padding, in_=root)
+    buttonExport = settings.button(root, text="Export", command=export_imp, background=settings.get_style_accentcolor())
+    buttonExport.pack(pady=padding, padx=padding, in_=root)
 
     textName.insert("end", imp.name)
     textTransform.insert("end", imp.transform)
@@ -142,4 +142,4 @@ def run_standAlone():
 
 
 if __name__ == "__main__":
-    run_standAlone()
+    run_imp_gen_IU()
