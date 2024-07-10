@@ -1,4 +1,6 @@
+import sys
 import tkinter as tk
+from tkinter import ttk
 from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter import messagebox
 from pathlib import Path
@@ -6,6 +8,12 @@ from pathlib import Path
 
 def open_file(str):
     return open(str, "r").read().split("\n")
+
+
+def load_resource(path):
+    if getattr(sys, "frozen", False):
+        path = Path(sys._MEIPASS).joinpath(path)
+    return open_file(path)
 
 
 def if_not_exist_make_folder(path):
@@ -23,8 +31,10 @@ class Keys:
     PROGRAM_NAME = "PROGRAM_NAME"
     PRIMARY_TEXT_COLOR = "PRIMARY_TEXT_COLOR"
     PRIMARY_COLOR = "PRIMARY_COLOR"
-    INPUT_COLOR = "INPUT_COLOR"
+    SECONDARY_TEXT_COLOR = "SECONDARY_TEXT_COLOR"
+    SECONDARY_COLOR = "SECONDARY_COLOR"
     ACCENT_COLOR = "ACCENT_COLOR"
+    INPUT_COLOR = "INPUT_COLOR"
     WARNING_COLOR = "WARNING_COLOR"
     WARNING_TEXT_COLOR = "WARNING_TEXT_COLOR"
     CLEAR_COLOR = "CLEAR_COLOR"
@@ -71,14 +81,6 @@ class Settings:
                 if k and v:
                     self.print_debug(f"Writing: {k},{v}\n")
                     f.write(f"{k},{v}\n")
-
-    def open_settings(self):
-        root = ImparianApp("Settings", self)
-        
-        grid = root.add_frame(color=self.get_style_primarycolor())
-        self.setting_grid(grid)
-
-        root.mainloop()
 
     # endregion
 
@@ -141,11 +143,17 @@ class Settings:
         if Keys.PRIMARY_COLOR not in self.data:
             self.set_setting(Keys.PRIMARY_COLOR, "MediumSpringGreen")
 
-        if Keys.INPUT_COLOR not in self.data:
-            self.set_setting(Keys.INPUT_COLOR, "white")
+        if Keys.SECONDARY_TEXT_COLOR not in self.data:
+            self.set_setting(Keys.SECONDARY_TEXT_COLOR, "white")
+
+        if Keys.SECONDARY_COLOR not in self.data:
+            self.set_setting(Keys.SECONDARY_COLOR, "darkgreen")
 
         if Keys.ACCENT_COLOR not in self.data:
             self.set_setting(Keys.ACCENT_COLOR, "plum")
+
+        if Keys.INPUT_COLOR not in self.data:
+            self.set_setting(Keys.INPUT_COLOR, "aquamarine")
 
         if Keys.WARNING_COLOR not in self.data:
             self.set_setting(Keys.WARNING_COLOR, "crimson")
@@ -169,27 +177,31 @@ class Settings:
 
     # endregion
 
-    # region Widget Overrides
+    # region Grid UI
+    def open_settings(self):
+        root = ImparianApp("Settings", self)
+
+        grid = root.add_frame()
+
+        self.setting_grid(grid)
+
+        root.mainloop()
 
     def setting_grid(self, frame):
-        #TODO: ADD SCROLL BAR TO SIDE!
-        i=0
-        labels= []
-        textvariables=[]
-        entries= []
-        padding= self.get_style_padding()
-        frame.grid_columnconfigure(0, weight=0)
-        frame.grid_columnconfigure(1, weight=1)
+        labels = []
+        textvariables = []
+        entries = []
+        padding = self.get_style_padding()
 
         def validate_data():
-            #TODO add validation!
+            # TODO add validation!
             altered = False
             for j in range(len(textvariables)):
                 k = labels[j].cget("text")
                 v = textvariables[j].get()
                 if v != self.data[k]:
                     entries[j].configure({"background": self.get_style_accentcolor()})
-                    altered= True
+                    altered = True
                 else:
                     entries[j].configure({"background": self.get_style_inputcolor()})
 
@@ -215,17 +227,48 @@ class Settings:
                 self.save_settings()
                 validate_data()
 
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_columnconfigure(1, weight=1)
+
+        grid_dummy = self.label(frame, "")
+        grid_dummy.grid(row=0, column=0, columnspan=2)
+        grid_dummy.update()
+
+        frame_canvas = self.frame(frame)
+        frame_canvas.grid(
+            row=1, column=0, columnspan=2, sticky="news", padx=padding, pady=padding
+        )
+        frame_canvas.grid_rowconfigure(0, weight=1)
+        frame_canvas.grid_columnconfigure(0, weight=1)
+        canvas = self.canvas(frame_canvas, background=self.get_style_secondarycolor())
+        canvas.grid(row=0, column=0, columnspan=2, sticky="news")
+        #TODO: Theme Scrollbar
+        vsb = ttk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
+        vsb.grid(row=0, column=2, sticky="ns")
+        canvas.configure(yscrollcommand=vsb.set)
+        grid_frame = self.frame(canvas)
+        canvas.create_window((0, 0), window=grid_frame, anchor="nw")
+        grid_height = len(self.data.items()) * (
+            grid_dummy.winfo_height() + (int(padding) * 2)
+        )
+        grid_frame.config(height=grid_height)
+        canvas.config(scrollregion=canvas.bbox("all"))
+        grid_frame.grid_columnconfigure(0, weight=0)
+        grid_frame.grid_columnconfigure(1, weight=1)
+        grid_dummy.grid_remove()
+
+        i = 0
         for k, v in self.data.items():
-            #TODO: Add support for different kinds of inputs:
+            # TODO: Add support for different kinds of inputs:
             #   [] Yes/no
             #   [] File/folder location/name
-            labels.append(self.label(frame, k))
+            labels.append(self.label(grid_frame, k,foreground=self.get_style_secondarytextcolor()))
             labels[i].grid(row=i, column=0, sticky="w", padx=padding, pady=padding)
-            textvariables.append(tk.StringVar(frame, v))
+            textvariables.append(tk.StringVar(grid_frame, v))
             textvariables[i].trace_add("write", enable_save)
-            entries.append(self.entry(frame,textvariables[i]))
-            entries[i].grid(row=i, column=1, sticky="ew", padx=padding, pady=padding)            
-            i+=1
+            entries.append(self.entry(grid_frame, textvariables[i], width=32))
+            entries[i].grid(row=i, column=1, sticky="ew", padx=padding, pady=padding)
+            i += 1
 
         def reset():
             for j in range(len(textvariables)):
@@ -238,7 +281,7 @@ class Settings:
             state="normal",
             background=self.get_style_accentcolor(),
         )
-        reset_button.grid(column=0, row=i, sticky="w", padx=padding, pady=padding)
+        reset_button.grid(column=0, row=2, sticky="e", padx=padding, pady=padding)
 
         save_button = self.button(
             frame,
@@ -247,11 +290,39 @@ class Settings:
             state="disable",
             background=self.get_style_accentcolor(),
         )
-        save_button.grid(column=1, row=i, sticky="e", padx=padding, pady=padding)
+        save_button.grid(column=1, row=2, sticky="w", padx=padding, pady=padding)
 
+    # endregion
 
-        
+    # region Widget Overrides
 
+    def frame(
+        self,
+        root,
+        background=None,
+        *args,
+        **kwargs,
+    ):
+        if background is None:
+            background = root["background"]
+        return tk.Frame(root, background=background, *args, **kwargs)
+
+    def canvas(
+        self,
+        root,
+        background=None,
+        *args,
+        **kwargs,
+    ):
+        if background is None:
+            background = root["background"]
+        return tk.Canvas(
+            root,
+            background=background,
+            highlightthickness=0,
+            *args,
+            **kwargs,
+        )
 
     def button(
         self,
@@ -261,7 +332,8 @@ class Settings:
         foreground=None,
         background=None,
         font=None,
-        state="normal",
+        *args,
+        **kwargs,
     ):
         if foreground is None:
             foreground = self.get_style_primarytextcolor()
@@ -276,14 +348,24 @@ class Settings:
             foreground=foreground,
             background=background,
             font=font,
-            state=state,
+            *args,
+            **kwargs,
         )
 
-    def label(self, root, text, foreground=None, background=None, font=None):
+    def label(
+        self,
+        root,
+        text,
+        foreground=None,
+        background=None,
+        font=None,
+        *args,
+        **kwargs,
+    ):
         if foreground is None:
             foreground = self.get_style_primarytextcolor()
         if background is None:
-            background = self.get_style_primarycolor()
+            background = root["background"]
         if font is None:
             font = self.get_style_textfont()
         return tk.Label(
@@ -292,6 +374,8 @@ class Settings:
             foreground=foreground,
             background=background,
             font=font,
+            *args,
+            **kwargs,
         )
 
     def entry(
@@ -302,7 +386,9 @@ class Settings:
         background=None,
         font=None,
         text="",
-        state="normal",
+        width=20,
+        *args,
+        **kwargs,
     ):
         if foreground is None:
             foreground = self.get_style_primarytextcolor()
@@ -317,10 +403,22 @@ class Settings:
             foreground=foreground,
             background=background,
             font=font,
-            state=state,
+            width=width,
+            *args,
+            **kwargs,
         )
 
-    def text(self, root, width, height, foreground=None, background=None, font=None):
+    def text(
+        self,
+        root,
+        width,
+        height,
+        foreground=None,
+        background=None,
+        font=None,
+        *args,
+        **kwargs,
+    ):
         if foreground is None:
             foreground = self.get_style_primarytextcolor()
         if background is None:
@@ -334,6 +432,8 @@ class Settings:
             foreground=foreground,
             background=background,
             font=font,
+            *args,
+            **kwargs,
         )
 
     # endregion
@@ -360,6 +460,12 @@ class Settings:
 
     def get_style_primarycolor(self):
         return self.get_setting(Keys.PRIMARY_COLOR)
+
+    def get_style_secondarytextcolor(self):
+        return self.get_setting(Keys.SECONDARY_TEXT_COLOR)
+    
+    def get_style_secondarycolor(self):
+        return self.get_setting(Keys.SECONDARY_COLOR)
 
     def get_style_inputcolor(self):
         return self.get_setting(Keys.INPUT_COLOR)
@@ -390,7 +496,7 @@ class Settings:
 
 # region Imparian Base App
 class ImparianApp(tk.Tk):
-    def __init__(self, title: str, settings=None, has_settings_edit=False):
+    def __init__(self, title: str, settings:Settings=None, has_settings_edit=False):
         super().__init__()
         self.next_row = 0
         if settings == None:
@@ -410,7 +516,7 @@ class ImparianApp(tk.Tk):
         #                            size=19,
         #                            weight=font.BOLD)
 
-        m_frame = self.add_frame(color=settings.get_style_primarytextcolor())
+        m_frame = self.add_frame(background=settings.get_style_primarytextcolor())
         self.top_menu(m_frame, title, has_settings_edit)
 
     def startMove(self, event):
@@ -450,6 +556,7 @@ class ImparianApp(tk.Tk):
         label.bind("<B1-Motion>", self.moving)
         label.grid(column=0, row=0, columnspan=2, sticky="ew")
         if has_settings_edit:
+            # TODO: Fix bug that is causing scrollbar to not be formatted when this is use.
             setting_button = tk.Button(
                 frame,
                 text="⚙",
@@ -470,11 +577,20 @@ class ImparianApp(tk.Tk):
         )
         exit_button.grid(row=0, column=2, sticky="e")
 
-    def add_frame(self, row=-1, column=0, sticky="new", color="White"):
+    def add_frame(
+        self, row=-1, column=0, sticky="new", background=None, *args, **kwargs
+    ):
+        if background is None:
+            background = self.settings.get_style_primarycolor()
         if row < 0:
             row = self.next_row
             self.next_row += 1
-        frame = tk.Frame(self, background=color)
+        frame = self.settings.frame(
+            self,
+            background=background,
+            *args,
+            **kwargs,
+        )
         frame.grid(column=column, row=row, sticky=sticky)
         return frame
 

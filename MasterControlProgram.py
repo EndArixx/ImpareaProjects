@@ -1,9 +1,10 @@
 import sys
 import tkinter as tk
 import PyInstaller.__main__
+import threading
 from CollectEpisodes import *
 from GenerateNewPage import *
-import threading
+from ImpGenerator import *
 
 
 VERSION = "v0.2.4"
@@ -12,6 +13,8 @@ settings = tools.Settings()
 PROGRAM_NAME = settings.get_program_name()
 PRIMARY_TEXT_COLOR = settings.get_style_primarytextcolor()
 PRIMARY_COLOR = settings.get_style_primarycolor()
+SECONDARY_TEXT_COLOR = settings.get_style_secondarytextcolor()
+SECONDARY_COLOR = settings.get_style_secondarycolor()
 INPUT_COLOR = settings.get_style_inputcolor()
 ACCENT_COLOR = settings.get_style_accentcolor()
 WARNING_COLOR = settings.get_style_warningcolor()
@@ -20,6 +23,16 @@ CLEAR_COLOR = settings.get_style_clearcolor()
 HEADER_FONT = settings.get_style_headerfont()
 TEXT_FONT = settings.get_style_textfont()
 PADDING = settings.get_style_padding()
+
+
+def get_zone_header(frame, title):
+    return settings.label(
+        frame,
+        text=title,
+        font=HEADER_FONT,
+        foreground=SECONDARY_TEXT_COLOR,
+        background=SECONDARY_COLOR,
+    )
 
 
 def generate_page_zone(frame):
@@ -54,10 +67,7 @@ def generate_page_zone(frame):
     frame.grid_columnconfigure(0, weight=0)
     frame.grid_columnconfigure(1, weight=1)
 
-    zone_label = settings.label(
-        frame,
-        text="Generate New Page",
-    )
+    zone_label = get_zone_header(frame, title="Generate New Page")
     zone_label.grid(
         column=0, row=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING
     )
@@ -76,12 +86,38 @@ def generate_page_zone(frame):
 
     generatepage_button = settings.button(
         frame,
-        text="Generate new Page",
+        text="Generate New Page",
         command=gen,
         state="disable",
         background=ACCENT_COLOR,
     )
     generatepage_button.grid(column=2, row=1, sticky="e", padx=PADDING, pady=PADDING)
+
+
+def generate_imp_zone(frame):
+    def gen_imp():
+        run_imp_gen_IU()
+
+    frame.grid_columnconfigure(0, weight=0)
+    frame.grid_columnconfigure(1, weight=1)
+
+    zone_label = get_zone_header(frame, title="Imps")
+    zone_label.grid(
+        column=0,
+        row=0,
+        columnspan=2,
+        sticky="we",
+        padx=PADDING,
+        pady=PADDING,
+    )
+
+    generatepage_button = settings.button(
+        frame,
+        text="Generate Imp",
+        command=gen_imp,
+        background=ACCENT_COLOR,
+    )
+    generatepage_button.grid(column=0, row=1, sticky="w", padx=PADDING, pady=PADDING)
 
 
 def collect_episodes_zone(frame):
@@ -126,33 +162,36 @@ def collect_episodes_zone(frame):
         square_button["state"] = "normal"
         transforms_button["state"] = "normal"
 
+    zone_label = get_zone_header(frame, title="Episode Collectors")
+    zone_label.grid(row=0, columnspan=2, padx=PADDING, pady=PADDING, sticky="we")
+
     collect_button = settings.button(
         frame,
         text="Collect Episodes",
         command=collect_episodes,
     )
-    collect_button.grid(row=0, column=0, padx=PADDING, pady=PADDING, sticky="we")
+    collect_button.grid(row=1, column=0, padx=PADDING, pady=PADDING, sticky="we")
 
     transforms_button = settings.button(
         frame,
         text="Collect Transform",
         command=collect_transforms,
     )
-    transforms_button.grid(row=0, column=1, padx=PADDING, pady=PADDING, sticky="we")
+    transforms_button.grid(row=1, column=1, padx=PADDING, pady=PADDING, sticky="we")
 
     slice_button = settings.button(
         frame,
         text="Slice Episodes",
         command=slice_episodes,
     )
-    slice_button.grid(row=1, column=0, padx=PADDING, pady=PADDING, sticky="we")
+    slice_button.grid(row=2, column=0, padx=PADDING, pady=PADDING, sticky="we")
 
     square_button = settings.button(
         frame,
         text="Square Episodes",
         command=square_episodes,
     )
-    square_button.grid(row=1, column=1, padx=PADDING, pady=PADDING, sticky="we")
+    square_button.grid(row=2, column=1, padx=PADDING, pady=PADDING, sticky="we")
 
     warning_label = settings.label(
         frame,
@@ -161,7 +200,7 @@ def collect_episodes_zone(frame):
         background=WARNING_COLOR,
         font=HEADER_FONT,
     )
-    warning_label.grid(row=0, column=0, rowspan=2, columnspan=2, sticky="ew")
+    warning_label.grid(row=1, column=0, rowspan=2, columnspan=2, sticky="ew")
     warning_label.grid_remove()
 
 
@@ -193,6 +232,7 @@ def file_zone(frame):
                     "--onefile",
                     "--icon=data/mcp.ico",
                     f"--name={PROGRAM_NAME}",
+                    "--add-data=data/:data",
                 ]
             )
             tk.messagebox.showinfo(title="Complete", message="Executable Created")
@@ -202,19 +242,23 @@ def file_zone(frame):
         thread = threading.Thread(target=run_thread, args=())
         thread.start()
 
+    zone_label = get_zone_header(frame, title="File Operations")
+    zone_label.grid(row=0, columnspan=3, padx=PADDING, pady=PADDING, sticky="we")
+
     open_comic_button = settings.button(
         frame,
         text="Open Comic Folder",
         command=open_comic_folder,
     )
-    open_comic_button.grid(row=0, column=0, sticky="w", padx=PADDING, pady=PADDING)
-    if not getattr(sys, 'frozen', False) and settings.in_debug_Mode:
+    open_comic_button.grid(row=1, column=0, sticky="w", padx=PADDING, pady=PADDING)
+
+    if not getattr(sys, "frozen", False) and settings.in_debug_Mode:
         create_exe_button = settings.button(
             frame,
             text="Create Executable",
             command=create_exe,
         )
-        create_exe_button.grid(row=0, column=1, sticky="w", padx=PADDING, pady=PADDING)
+        create_exe_button.grid(row=1, column=1, sticky="w", padx=PADDING, pady=PADDING)
 
     warning_label = settings.label(
         frame,
@@ -223,24 +267,31 @@ def file_zone(frame):
         background=WARNING_COLOR,
         font=HEADER_FONT,
     )
-    warning_label.grid(row=0, column=0, columnspan=3, sticky="ew")
+    warning_label.grid(row=1, column=0, columnspan=3, sticky="ew")
     warning_label.grid_remove()
 
 
 def execute_primary_function():
+    
     # Create the main window
-    root = tools.ImparianApp(f"{settings.get_program_name()} - {VERSION}", settings, True)
+    root = tools.ImparianApp(
+        f"{settings.get_program_name()} - {VERSION}", settings, True
+    )
 
     # Generate New Page
-    gnp_frame = root.add_frame(color=CLEAR_COLOR)
+    gnp_frame = root.add_frame(background=PRIMARY_COLOR)
     generate_page_zone(gnp_frame)
 
+    # Generate Imp
+    gi_frame = root.add_frame(background=PRIMARY_COLOR)
+    generate_imp_zone(gi_frame)
+
     # Collect Episodes
-    ce_frame = root.add_frame(color=CLEAR_COLOR)
+    ce_frame = root.add_frame(background=CLEAR_COLOR)
     collect_episodes_zone(ce_frame)
 
     # File zone
-    fz_frame = root.add_frame(color=CLEAR_COLOR)
+    fz_frame = root.add_frame(background=CLEAR_COLOR)
     file_zone(fz_frame)
 
     # execute the GUI
