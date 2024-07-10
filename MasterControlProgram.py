@@ -7,7 +7,7 @@ from GenerateNewPage import *
 from ImpGenerator import *
 
 
-VERSION = "v0.2.4"
+VERSION = "v0.2.5"
 settings = tools.Settings()
 # Load Styles
 PROGRAM_NAME = settings.get_program_name()
