@@ -179,7 +179,7 @@ class Settings:
 
     # region Grid UI
     def open_settings(self):
-        root = ImparianApp("Settings", self)
+        root = ImparianApp("Settings", self, minwidth=600)
 
         grid = root.add_frame()
 
@@ -386,7 +386,6 @@ class Settings:
         background=None,
         font=None,
         text="",
-        width=20,
         *args,
         **kwargs,
     ):
@@ -403,7 +402,6 @@ class Settings:
             foreground=foreground,
             background=background,
             font=font,
-            width=width,
             *args,
             **kwargs,
         )
@@ -498,7 +496,7 @@ class Settings:
 
 # region Imparian Base App
 class ImparianApp(tk.Tk):
-    def __init__(self, title: str, settings:Settings=None, has_settings_edit=False):
+    def __init__(self, title: str, settings:Settings=None, has_settings_edit=False, minwidth=0, minheight=0):
         super().__init__()
         self.next_row = 0
         if settings == None:
@@ -507,7 +505,7 @@ class ImparianApp(tk.Tk):
         self.wm_attributes("-transparentcolor", settings.get_style_clearcolor())
         self.title("Imparea Comic Utilities")
         self.configure(background=settings.get_style_clearcolor())
-        self.minsize(600, 0)
+        self.minsize(minwidth, minheight)
         self.overrideredirect(1)
         self.attributes("-topmost", True)
         self.grid_columnconfigure(0, weight=1)
