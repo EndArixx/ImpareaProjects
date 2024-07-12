@@ -69,20 +69,20 @@ def generate_page_zone(frame):
 
     zone_label = get_zone_header(frame, title="Generate New Page")
     zone_label.grid(
-        column=0, row=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING
+        row=0, column=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING
     )
 
     pagetitle_label = settings.label(
         frame,
         text="Page Title:",
     )
-    pagetitle_label.grid(column=0, row=1, sticky="w", padx=PADDING, pady=PADDING)
+    pagetitle_label.grid(row=1, column=0, sticky="w", padx=PADDING, pady=PADDING)
 
     pagetitle_entry = settings.entry(
         frame,
         textvariable=pagetitle_var,
     )
-    pagetitle_entry.grid(column=1, row=1, sticky="we", padx=PADDING, pady=PADDING)
+    pagetitle_entry.grid(row=1, column=1, sticky="we", padx=PADDING, pady=PADDING)
 
     generatepage_button = settings.button(
         frame,
@@ -94,30 +94,126 @@ def generate_page_zone(frame):
     generatepage_button.grid(column=2, row=1, sticky="e", padx=PADDING, pady=PADDING)
 
 
-def generate_imp_zone(frame):
-    def gen_imp():
-        run_imp_gen_IU()
+def imp_management_zone(frame):
+    imp_gen = ImpGenerator(settings)
+    frame.grid_columnconfigure(0, weight=1)
+    open_var = tk.StringVar(frame, "")
+    selectedimp = imp_gen.get_dumi()
 
-    frame.grid_columnconfigure(0, weight=0)
+    class Tags:
+        gen_tag = "GENERATE_IMP"
+        imps_tag = "SHOW_IMPS"
+        edit_tag = "EDIT_IMP"
+
+    frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, weight=1)
+    frame.grid_columnconfigure(2, weight=1)
+
+    def turn_off(button, frame):
+        button.configure({"background": SECONDARY_COLOR})
+        button.configure({"font": TEXT_FONT})
+        frame.grid_remove()
+
+    def turn_on(button, frame):
+        frame.grid()
+        button.configure({"background": PRIMARY_COLOR})
+        button.configure({"font": HEADER_FONT})
+
+    def open(tag):
+        turn_off(button_generate, gen_frame)
+        turn_off(button_showimps, imps_frame)
+        turn_off(button_edit, edit_frame)
+
+        if tag == open_var.get():
+            open_var.set("")
+        else:
+            match tag:
+                case Tags.gen_tag:
+                    turn_on(button_generate, gen_frame)
+
+                case Tags.imps_tag:
+                    turn_on(button_showimps, imps_frame)
+
+                case Tags.edit_tag:
+                    turn_on(button_edit, edit_frame)
+            open_var.set(tag)
+
+    def show_generator():
+        open(Tags.gen_tag)
+
+    def show_imps():
+        open(Tags.imps_tag)
+
+    def show_edit():
+        open(Tags.edit_tag)
 
     zone_label = get_zone_header(frame, title="Imps")
     zone_label.grid(
         column=0,
         row=0,
-        columnspan=2,
+        columnspan=3,
         sticky="we",
         padx=PADDING,
         pady=PADDING,
     )
 
-    generatepage_button = settings.button(
+    button_showimps = settings.button(
         frame,
-        text="Generate Imp",
-        command=gen_imp,
-        background=ACCENT_COLOR,
+        "Imp Grid",
+        show_imps,
+        background=SECONDARY_COLOR,
+        highlightthickness=0,
+        bd=0,
     )
-    generatepage_button.grid(column=0, row=1, sticky="w", padx=PADDING, pady=PADDING)
+    button_showimps.grid(row=1, column=0, sticky="ew", padx=PADDING, pady=PADDING)
+    button_generate = settings.button(
+        frame,
+        "Create Imp",
+        show_generator,
+        background=SECONDARY_COLOR,
+        highlightthickness=0,
+        bd=0,
+    )
+    button_generate.grid(row=1, column=1, sticky="ew", padx=PADDING, pady=PADDING)
+    button_edit = settings.button(
+        frame,
+        "Edit Imp",
+        show_edit,
+        background=SECONDARY_COLOR,
+        highlightthickness=0,
+        bd=0,
+    )
+    button_edit.grid(row=1, column=2, sticky="ew", padx=PADDING, pady=PADDING)
+
+    imps_frame = settings.frame(frame)
+    imps_frame.grid(
+        row=2, column=0, columnspan=3, sticky="news", padx=PADDING, pady=PADDING
+    )
+    # TODO add Imp grid
+    imps_frame.grid_columnconfigure(0, weight=1)
+    DUMMY = settings.label(
+        imps_frame,
+        "THIS IS AN IMP PLACEHOLDER!",
+        background=WARNING_COLOR,
+        foreground=WARNING_TEXT_COLOR,
+    )
+    DUMMY.grid(row=0, column=0, sticky="news", padx=PADDING, pady=PADDING)
+    imps_frame.grid_remove()
+
+    gen_frame = settings.frame(frame)
+    gen_frame.grid(
+        row=3, column=0, columnspan=3, sticky="news", padx=PADDING, pady=PADDING
+    )
+    imp_gen.create_random_zone(gen_frame)
+    gen_frame.grid_remove()
+
+    edit_frame = settings.frame(frame)
+    edit_frame.grid(
+        row=4, column=0, columnspan=3, sticky="news", padx=PADDING, pady=PADDING
+    )
+    edit_frame.grid_columnconfigure(0, weight=1)
+    imp_gen.edit_imp_zone(edit_frame,selectedimp)
+    edit_frame.grid_remove()
 
 
 def collect_episodes_zone(frame):
@@ -272,7 +368,7 @@ def file_zone(frame):
 
 
 def execute_primary_function():
-    
+
     # Create the main window
     root = tools.ImparianApp(
         f"{settings.get_program_name()} - {VERSION}", settings, True
@@ -282,9 +378,9 @@ def execute_primary_function():
     gnp_frame = root.add_frame(background=PRIMARY_COLOR)
     generate_page_zone(gnp_frame)
 
-    # Generate Imp
-    gi_frame = root.add_frame(background=PRIMARY_COLOR)
-    generate_imp_zone(gi_frame)
+    # Imp Management
+    imp_management_frame = root.add_frame(background=PRIMARY_COLOR)
+    imp_management_zone(imp_management_frame)
 
     # Collect Episodes
     ce_frame = root.add_frame(background=CLEAR_COLOR)

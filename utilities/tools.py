@@ -413,6 +413,7 @@ class Settings:
         root,
         width,
         height,
+        textvariable,
         foreground=None,
         background=None,
         font=None,
@@ -429,6 +430,7 @@ class Settings:
             root,
             height=height,
             width=width,
+            textvariable=textvariable,
             foreground=foreground,
             background=background,
             font=font,
@@ -578,7 +580,7 @@ class ImparianApp(tk.Tk):
         exit_button.grid(row=0, column=2, sticky="e")
 
     def add_frame(
-        self, row=-1, column=0, sticky="new", background=None, *args, **kwargs
+        self, row=-1, column=0, sticky="news", background=None, *args, **kwargs
     ):
         if background is None:
             background = self.settings.get_style_primarycolor()
@@ -591,7 +593,7 @@ class ImparianApp(tk.Tk):
             *args,
             **kwargs,
         )
-        frame.grid(column=column, row=row, sticky=sticky)
+        frame.grid(row=row, column=column, sticky=sticky)
         return frame
 
 
