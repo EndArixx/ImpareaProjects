@@ -3,40 +3,75 @@ import random
 import string
 import tkinter as tk
 from tkinter import colorchooser
-from typing import List
+from typing import Dict, List
 import utilities.tools as tools
 
 
 class Imp:
-    def __init__(self, name:str, adjective:str, flavor:str, noun:str, pronouns:str, color:str):
+    def __init__(
+        self,
+        name: str,
+        adjective: str,
+        flavor: str,
+        noun: str,
+        pronouns: str,
+        glowcolor: tools.Color,
+        skincolor: tools.Color,
+        dullcolor: tools.Color,
+    ):
         self.name = name
         self.adjective = adjective
         self.flavor = flavor
         self.noun = noun
         self.transform = lambda: f"{self.adjective}! {self.flavor}! {self.noun}!"
         self.pronouns = pronouns
-        self.color = color
-        #name,adjective,flavor,noun,pronoun,color
-        self.filestring = lambda: f"{self.name},{self.adjective},{self.flavor},{self.noun},{self.pronouns},{self.color}" 
-    
+        self.glowcolor = glowcolor
+        self.skincolor = skincolor
+        self.dullcolor = dullcolor
+        # name,adjective,flavor,noun,pronoun,glowcolor,skincolor,dullcolor
+        self.filestring = (
+            lambda: f"{self.name},{self.adjective},{self.flavor},{self.noun},{self.pronouns},{self.glowcolor},{self.skincolor},{self.dullcolor}"
+        )
+
     @classmethod
     def create_imp_from_filestring(self, filestring):
+        if len(filestring) == 0:
+            return None
         if filestring[0] == "#":
             return None
         data = filestring.split(",")
-        if len(data) != 6:
+        if len(data) != 8:
             print(f"Error, filestring could not be parsed:\n {filestring}")
             return None
 
-        imp = Imp(data[0], data[1], data[2], data[3], data[4], data[5])
-        
+        imp = Imp(
+            data[0],
+            data[1],
+            data[2],
+            data[3],
+            data[4],
+            tools.Color(data[5]),
+            tools.Color(data[6]),
+            tools.Color(data[7]),
+        )
+
         return imp
-    
-
-
 
     def __str__(self):
-        return f"   Name: {self.name}\n   Transform: {self.transform()}\n   Pronouns: {self.pronouns}\n   Color: {self.color}"
+        return f"   Name: {self.name}\n   Transform: {self.transform()}\n   Pronouns: {self.pronouns}\n   Glow Color: {self.glowcolor}, Skin Color: {self.skincolor}, Dull Color: {self.dullcolor}"
+
+    def set_glowcolor(self, color_str):
+        self.glowcolor = tools.Color(color_str)
+
+    def set_skincolor(self, color_str):
+        self.skincolor = tools.Color(color_str)
+
+    def set_dullcolor(self, color_str):
+        self.dullcolor = tools.Color(color_str)
+
+    @classmethod
+    def get_empi(self):
+        return Imp("", "", "", "", "", "#FFFFFF", "#A6A6A6", "#3B3B3B")
 
 
 class Tags:
@@ -55,17 +90,14 @@ class ImpFactory:
         self.alphabet = string.ascii_lowercase
         self.imps_file_path = self.settings.get_imps_save()
 
+        self.edit_imp = Imp.get_empi()
         self.imps = self.load_imps_from_file()
 
         self.padding = self.settings.get_style_padding()
 
+        self.grid_columns = []
+
     # region Gets
-    def get_dumi(self):
-        return Imp("Dumi", "Public", "Plain", "Placeholder", "Ask", "#8008E1")
-
-    def get_empi(self):
-        return Imp("", "", "", "", "", "#FFFFFF")
-
     def get_pronouns(self):
         return choice(["She/Her", "He/Him", "They/Them", "Ask"])
 
@@ -93,10 +125,6 @@ class ImpFactory:
     def get_noun(self, letter):
         return self.get_word_with(letter, self.nouns).capitalize()
 
-    def get_color(self):
-        r = lambda: random.randint(0, 255)
-        return "#%02X%02X%02X" % (r(), r(), r())
-
     # endregion
 
     def generate_an_imp(self):
@@ -111,52 +139,52 @@ class ImpFactory:
         flavor = self.get_flav(letter)
         noun = self.get_noun(letter)
         pronouns = self.get_pronouns()
-        color = self.get_color()
+        glowcolor = tools.Color.get_random_color()
+        skincolor = tools.Color.get_random_color()
+        dullcolor = tools.Color.get_random_color()
 
-        imp = Imp(name, adjective, flavor, noun, pronouns, color)
+        imp = Imp(
+            name, adjective, flavor, noun, pronouns, glowcolor, skincolor, dullcolor
+        )
 
         self.settings.print_debug(f"Generating Random Imp:\n{imp}")
         return imp
-    
-    #region File Stuph
 
-    def create_imp_file(self):
-        #TODO add functionality
-        self.settings.print_debug("Creating imp file.")
+    # region File Stuph
 
     def save_imps_to_file(self):
-        #TODO add functionality
         self.settings.print_debug("Saving all imps")
+        text = "#name,adjective,flavor,noun,pronoun,glowcolor,skincolor,dullcolor\n"
+        for imp in self.imps.values():
+            text += f"{imp.filestring()}\n"
 
-    def update_imp_byname(self, name:str):
-        #TODO add functionality
-        self.settings.print_debug(f"updating {name}")
+        tools.overwrite_file(text, self.settings.get_imps_save())
 
-
-    def load_imps_from_file(self) -> List[Imp]:
+    def load_imps_from_file(self) -> Dict[str, Imp]:
         self.settings.print_debug(f"Loading Imps!\n  '{self.imps_file_path}'")
 
-        imps = []
+        imps = {}
         data = tools.open_file(self.imps_file_path)
         for i in data:
             imp = Imp.create_imp_from_filestring(i)
             if imp is not None:
                 self.settings.print_debug(f"    {imp.name} Loaded.")
-                imps.append(imp)
-
+                imps[imp.name] = imp
         return imps
-    
-    # endregion 
+
+    # endregion
 
     # region UI zones
 
-    def load_vars_from_imp(self, imp):
+    def load_vars_from_imp(self, imp: Imp):
         self.name_var.set(imp.name)
         self.adj_var.set(imp.adjective)
         self.flavor_var.set(imp.flavor)
         self.noun_var.set(imp.noun)
         self.pronouns_var.set(imp.pronouns)
-        self.color_var.set(imp.color)
+        self.glowcolor_var.set(imp.glowcolor)
+        self.skincolor_var.set(imp.skincolor)
+        self.dullcolor_var.set(imp.dullcolor)
 
     def add_frame(self, root, row):
         frame = self.settings.frame(root)
@@ -169,47 +197,50 @@ class ImpFactory:
             pady=self.padding,
         )
         return frame
+    
+    def turn_off(self, button, frame):
+        button.configure({"background": self.settings.get_style_secondarycolor()})
+        button.configure(
+            {"foreground": self.settings.get_style_secondarytextcolor()}
+        )
+        button.configure({"font": self.settings.get_style_textfont()})
+        frame.grid_remove()
+
+    def turn_on(self, button, frame):
+        frame.grid()
+        button.configure({"background": self.settings.get_style_primarycolor()})
+        button.configure({"foreground": self.settings.get_style_primarytextcolor()})
+        button.configure({"font": self.settings.get_style_headerfont()})
+
+    def open_panel(self, tag):
+        self.turn_off(self.button_edit_imp, self.edit_frame)
+        self.turn_off(self.button_show_imps, self.grid_frame)
+
+        if tag == self.tab_var.get():
+            self.tab_var.set("")
+        else:
+            match tag:
+                case Tags.edit_tag:
+                    self.turn_on(self.button_edit_imp, self.edit_frame)
+
+                case Tags.grid_tag:
+                    self.turn_on(self.button_show_imps, self.grid_frame)
+
+            self.tab_var.set(tag)
 
     def imp_management_zone(self, frame, tag=""):
         self.tab_var = tk.StringVar(frame, "")
-        selectedimp = self.get_empi()
 
         for i in range(2):
             frame.grid_columnconfigure(i, weight=1)
 
-        def turn_off(button, frame):
-            button.configure({"background": self.settings.get_style_secondarycolor()})
-            button.configure({"font": self.settings.get_style_textfont()})
-            frame.grid_remove()
-
-        def turn_on(button, frame):
-            frame.grid()
-            button.configure({"background": self.settings.get_style_primarycolor()})
-            button.configure({"font": self.settings.get_style_headerfont()})
-
-        def open(tag):
-            turn_off(button_edit_imp, edit_frame)
-            turn_off(button_show_imps, grid_frame)
-
-            if tag == self.tab_var.get():
-                self.tab_var.set("")
-            else:
-                match tag:
-                    case Tags.edit_tag:
-                        turn_on(button_edit_imp, edit_frame)
-
-                    case Tags.grid_tag:
-                        turn_on(button_show_imps, grid_frame)
-
-                self.tab_var.set(tag)
-
         def show_edit():
-            open(Tags.edit_tag)
+            self.open_panel(Tags.edit_tag)
 
         def show_grid():
-            open(Tags.grid_tag)
+            self.open_panel(Tags.grid_tag)
 
-        button_show_imps = self.settings.button(
+        self.button_show_imps = self.settings.button(
             frame,
             "Imps",
             show_grid,
@@ -217,10 +248,10 @@ class ImpFactory:
             bd=0,
             width=15,
         )
-        button_show_imps.grid(
+        self.button_show_imps.grid(
             row=1, column=0, sticky="ew", padx=self.padding, pady=self.padding
         )
-        button_edit_imp = self.settings.button(
+        self.button_edit_imp = self.settings.button(
             frame,
             "Create/Edit Imp",
             show_edit,
@@ -228,75 +259,352 @@ class ImpFactory:
             bd=0,
             width=15,
         )
-        button_edit_imp.grid(
+        self.button_edit_imp.grid(
             row=1, column=1, sticky="ew", padx=self.padding, pady=self.padding
         )
 
-        grid_frame = self.add_frame(frame, 2)
-        self.imp_grid_zone(grid_frame)
-        grid_frame.grid_remove()
+        self.grid_frame = self.add_frame(frame, 2)
+        self.imp_grid_zone(self.grid_frame)
+        self.grid_frame.grid_remove()
 
-        edit_frame = self.add_frame(frame, 3)
-        self.imp_edit_zone(edit_frame, selectedimp)
-        edit_frame.grid_remove()
+        self.edit_frame = self.add_frame(frame, 3)
+        self.imp_edit_zone(self.edit_frame)
+        self.edit_frame.grid_remove()
 
-        open(tag)
+        self.open_panel(tag)
+
+    def refreshgrid(self):
+        if len(self.grid_columns) > 0:
+            for row in self.grid_columns:
+                if len(row) > 0:
+                    for cell in row:
+                        cell.destroy()
+            self.grid_columns = []
+        i = 1
+
+        def edit(target):
+            self.settings.print_debug(f"Editing {target}")
+            imp = self.imps[target]
+            self.load_vars_from_imp(imp)
+            self.open_panel(Tags.edit_tag)
+
+
+        def delete(target):
+            result = tk.messagebox.askyesno(
+                title=f"Delete {target}",
+                message=f"Are you sure you wish to delete {target}?",
+            )
+            if result:
+                if self.imps.pop(target):
+                    self.settings.print_debug(f"  Removed {target} from grid")
+                    self.refreshgrid()
+                else:
+                    self.settings.print_debug(f"ERROR: Failed to remove {target} from grid")
+
+        for imp in self.imps.values():
+            row = []
+            row.append(
+                self.settings.label(
+                    self.imp_frame, imp.name, borderwidth=1, relief="solid"
+                )
+            )
+            row[0].grid(row=i, column=0, sticky="news")
+
+            row.append(
+                self.settings.label(
+                    self.imp_frame, imp.transform(), borderwidth=1, relief="solid"
+                )
+            )
+            row[1].grid(row=i, column=1, sticky="news")
+
+            row.append(
+                self.settings.label(
+                    self.imp_frame, imp.pronouns, borderwidth=1, relief="solid"
+                )
+            )
+            row[2].grid(row=i, column=2, sticky="news")
+
+            row.append(
+                self.settings.label(
+                    self.imp_frame,
+                    imp.glowcolor,
+                    background=imp.glowcolor,
+                    borderwidth=1,
+                    relief="solid",
+                )
+            )
+            row[3].grid(row=i, column=3, sticky="news")
+
+            row.append(
+                self.settings.label(
+                    self.imp_frame,
+                    imp.skincolor,
+                    background=imp.skincolor,
+                    borderwidth=1,
+                    relief="solid",
+                )
+            )
+            row[4].grid(row=i, column=4, sticky="news")
+
+            row.append(
+                self.settings.label(
+                    self.imp_frame,
+                    imp.dullcolor,
+                    background=imp.dullcolor,
+                    borderwidth=1,
+                    relief="solid",
+                )
+            )
+            row[5].grid(row=i, column=5, sticky="news")
+
+            row.append(
+                self.settings.button(
+                    self.imp_frame,
+                    "✎",
+                    command=lambda target= imp.name: edit(target),
+                    foreground=self.settings.get_style_primarytextcolor(),
+                    background=self.settings.get_style_primarycolor(),
+                    borderwidth=1,
+                    relief="solid",
+                    font= self.settings.get_style_headerfont(),
+                )
+            )
+            row[6].grid(row=i, column=6, sticky="news")
+
+            row.append(
+                self.settings.button(
+                    self.imp_frame,
+                    "🗑",
+                    command=lambda target= imp.name: delete(target),
+                    foreground=self.settings.get_style_primarytextcolor(),
+                    background=self.settings.get_style_primarycolor(),
+                    borderwidth=1,
+                    relief="solid",
+                    font= self.settings.get_style_headerfont(),
+                )
+            )
+            row[7].grid(row=i, column=7, sticky="news")
+
+            self.grid_columns.append(row)
+            i += 1
 
     def imp_grid_zone(self, frame):
-        # TODO implemement
-        frame.grid_columnconfigure(0, weight=1)
-        grid = self.settings.frame(frame)
-        i=0
-        imp_grid = []
-        for imp in self.imps:
-            lbl = self.settings.label(grid, imp.name)
-            lbl.grid(row=i, column=0)
+        secondary_text_color = self.settings.get_style_secondarytextcolor()
+        secondary_color = self.settings.get_style_secondarycolor()
+        zone_columns = 4
+        grid_columns = 8
+        headerwidth = 10
 
-            imp_grid.append(lbl)
-            i+=1
-        
+        for i in range(zone_columns):
+            frame.grid_columnconfigure(zone_columns, weight=1)
+
+        self.imp_frame = self.settings.frame(frame)
+        for i in range(grid_columns):
+            self.imp_frame.grid_columnconfigure(i, weight=1)
+
+        label_header_name = self.settings.label(
+            self.imp_frame,
+            "Name",
+            font=self.settings.get_style_headerfont(),
+            background=secondary_color,
+            foreground=secondary_text_color,
+            borderwidth=1,
+            relief="solid",
+            width=headerwidth,
+            
+        )
+        label_header_name.grid(row=0, column=0, sticky="ew")
+
+        label_header_transform = self.settings.label(
+            self.imp_frame,
+            "Transform",
+            font=self.settings.get_style_headerfont(),
+            background=secondary_color,
+            foreground=secondary_text_color,
+            borderwidth=1,
+            relief="solid",
+            width=headerwidth,
+        )
+        label_header_transform.grid(row=0, column=1, sticky="ew")
+
+        label_header_pronoun = self.settings.label(
+            self.imp_frame,
+            "Pronouns",
+            font=self.settings.get_style_headerfont(),
+            background=secondary_color,
+            foreground=secondary_text_color,
+            borderwidth=1,
+            relief="solid",
+            width=headerwidth,
+        )
+        label_header_pronoun.grid(row=0, column=2, sticky="ew")
+
+        label_header_glowcolor = self.settings.label(
+            self.imp_frame,
+            "Glow Color",
+            font=self.settings.get_style_headerfont(),
+            background=secondary_color,
+            foreground=secondary_text_color,
+            borderwidth=1,
+            relief="solid",
+            width=headerwidth,
+        )
+        label_header_glowcolor.grid(row=0, column=3, sticky="ew")
+
+        label_header_skincolor = self.settings.label(
+            self.imp_frame,
+            "Skin Color",
+            font=self.settings.get_style_headerfont(),
+            background=secondary_color,
+            foreground=secondary_text_color,
+            borderwidth=1,
+            relief="solid",
+            width=headerwidth,
+        )
+        label_header_skincolor.grid(row=0, column=4, sticky="ew")
+
+        label_header_dullcolor = self.settings.label(
+            self.imp_frame,
+            "Dull Color",
+            font=self.settings.get_style_headerfont(),
+            background=secondary_color,
+            foreground=secondary_text_color,
+            borderwidth=1,
+            relief="solid",
+            width=headerwidth,
+        )
+        label_header_dullcolor.grid(row=0, column=5, sticky="ew")
+
+        label_header_functions = self.settings.label(
+            self.imp_frame,
+            "",
+            font=self.settings.get_style_headerfont(),
+            background=secondary_color,
+            foreground=secondary_text_color,
+            borderwidth=1,
+            relief="solid",
+        )
+        label_header_functions.grid(row=0, column=6, columnspan=2, sticky="ew")
 
 
-    def imp_edit_zone(self, frame, imp: Imp):
-        self.name_var = tk.StringVar(frame, imp.name)
-        self.adj_var = tk.StringVar(frame, imp.adjective)
-        self.flavor_var = tk.StringVar(frame, imp.flavor)
-        self.noun_var = tk.StringVar(frame, imp.noun)
-        self.pronouns_var = tk.StringVar(frame, imp.pronouns)
-        self.color_var = tk.StringVar(frame, imp.color)
+        self.refreshgrid()
+        self.imp_frame.grid(
+            row=0,
+            column=0,
+            columnspan=zone_columns,
+            sticky="ew",
+            padx=self.padding,
+            pady=self.padding,
+        )
+
+        button_save_imps = self.settings.button(
+            frame,
+            "Save Imps",
+            self.save_imps_to_file,
+            background=secondary_color,
+            foreground=secondary_text_color,
+        )
+        button_save_imps.grid(
+            row=1,
+            column=zone_columns - 1,
+            sticky="ew",
+            padx=self.padding,
+            pady=self.padding,
+        )
+
+    def imp_edit_zone(self, frame):
+        self.name_var = tk.StringVar(frame, self.edit_imp.name)
+        self.adj_var = tk.StringVar(frame, self.edit_imp.adjective)
+        self.flavor_var = tk.StringVar(frame, self.edit_imp.flavor)
+        self.noun_var = tk.StringVar(frame, self.edit_imp.noun)
+        self.pronouns_var = tk.StringVar(frame, self.edit_imp.pronouns)
+        self.glowcolor_var = tk.StringVar(frame, self.edit_imp.glowcolor)
+        self.skincolor_var = tk.StringVar(frame, self.edit_imp.skincolor)
+        self.dullcolor_var = tk.StringVar(frame, self.edit_imp.dullcolor)
 
         def randomize_button_press():
             self.load_vars_from_imp(self.generate_an_imp())
 
-        def save_button_press():
-            # TODO implement new version
-            print("NONE fuctioning")
-            self.save_imp(imp)
+        def can_add2grid():
+            if (
+                len(self.name_var.get())
+                * len(self.adj_var.get())
+                * len(self.flavor_var.get())
+                * len(self.noun_var.get())
+                * len(self.pronouns_var.get())
+                * len(self.glowcolor_var.get())
+                * len(self.skincolor_var.get())
+                * len(self.dullcolor_var.get())
+                == 0
+            ):
+                return False
+            return True
 
-        def pick_color():
+        def add2grid_button_press():
+            if can_add2grid():
+                self.imps[self.edit_imp.name] = Imp.create_imp_from_filestring(self.edit_imp.filestring())
+                self.load_vars_from_imp(Imp.get_empi())
+                update_selected_imp()
+                self.refreshgrid()
+                self.open_panel(Tags.grid_tag)
+
+        def pick_glowcolor():
             color = colorchooser.askcolor(
-                title="Choose color", color=self.color_var.get()
+                title="Choose Glow Color", color=self.glowcolor_var.get()
             )[1]
             if color is not None:
-                self.color_var.set(color)
-                update_imp()
+                self.glowcolor_var.set(color)
+                update_selected_imp()
 
-        def update_imp(*args):
-            imp.name = self.name_var.get()
-            imp.adjective = self.adj_var.get()
-            imp.flavor = self.flavor_var.get()
-            imp.noun = self.noun_var.get()
-            imp.pronouns = self.pronouns_var.get()
-            imp.color = self.color_var.get()
-            button_color.configure({"background": imp.color})
-            button_color.configure({"text": imp.color})
+        def pick_skincolor():
+            color = colorchooser.askcolor(
+                title="Choose Skin Color", color=self.skincolor_var.get()
+            )[1]
+            if color is not None:
+                self.skincolor_var.set(color)
+                update_selected_imp()
 
-        self.name_var.trace_add("write", update_imp)
-        self.adj_var.trace_add("write", update_imp)
-        self.flavor_var.trace_add("write", update_imp)
-        self.noun_var.trace_add("write", update_imp)
-        self.pronouns_var.trace_add("write", update_imp)
-        self.color_var.trace_add("write", update_imp)
+        def pick_dullcolor():
+            color = colorchooser.askcolor(
+                title="Choose Dull Color", color=self.dullcolor_var.get()
+            )[1]
+            if color is not None:
+                self.dullcolor_var.set(color)
+                update_selected_imp()
+
+        def update_selected_imp(*args):
+            self.edit_imp.name = self.name_var.get()
+            self.edit_imp.adjective = self.adj_var.get()
+            self.edit_imp.flavor = self.flavor_var.get()
+            self.edit_imp.noun = self.noun_var.get()
+            self.edit_imp.pronouns = self.pronouns_var.get()
+            self.edit_imp.set_glowcolor(self.glowcolor_var.get())
+            self.edit_imp.set_skincolor(self.skincolor_var.get())
+            self.edit_imp.set_dullcolor(self.dullcolor_var.get())
+            button_glowcolor.configure({"background": self.edit_imp.glowcolor})
+            button_glowcolor.configure({"text": self.edit_imp.glowcolor})
+            button_skincolor.configure({"background": self.edit_imp.skincolor})
+            button_skincolor.configure({"text": self.edit_imp.skincolor})
+            button_dullcolor.configure({"background": self.edit_imp.dullcolor})
+            button_dullcolor.configure({"text": self.edit_imp.dullcolor})
+
+            if self.name_var.get() in self.imps.keys():
+                button_add2grid["text"] = "Update Grid"
+            else: 
+                button_add2grid["text"] = "Add to Grid"
+            if can_add2grid():
+                button_add2grid["state"] = "normal"
+            else:
+                button_add2grid["state"] = "disable"
+
+        self.name_var.trace_add("write", update_selected_imp)
+        self.adj_var.trace_add("write", update_selected_imp)
+        self.flavor_var.trace_add("write", update_selected_imp)
+        self.noun_var.trace_add("write", update_selected_imp)
+        self.pronouns_var.trace_add("write", update_selected_imp)
+        self.glowcolor_var.trace_add("write", update_selected_imp)
+        self.skincolor_var.trace_add("write", update_selected_imp)
+        self.dullcolor_var.trace_add("write", update_selected_imp)
 
         for j in range(6):
             frame.grid_columnconfigure(j, weight=1)
@@ -363,9 +671,7 @@ class ImpFactory:
         )
         i += 1
 
-        label_adj = self.settings.label(
-            frame, text="Adjective"
-        )
+        label_adj = self.settings.label(frame, text="Adjective")
         label_adj.grid(
             row=i,
             column=0,
@@ -374,9 +680,7 @@ class ImpFactory:
             padx=self.padding,
             pady=self.padding,
         )
-        label_flavor = self.settings.label(
-            frame, text="Flavor"
-        )
+        label_flavor = self.settings.label(frame, text="Flavor")
         label_flavor.grid(
             row=i,
             column=2,
@@ -385,9 +689,7 @@ class ImpFactory:
             padx=self.padding,
             pady=self.padding,
         )
-        label_noun = self.settings.label(
-            frame, text="Noun"
-        )
+        label_noun = self.settings.label(frame, text="Noun")
         label_noun.grid(
             row=i,
             column=4,
@@ -440,16 +742,73 @@ class ImpFactory:
         )
         i += 1
 
-        button_color = self.settings.button(
-            frame,
-            text=self.color_var.get(),
-            command=pick_color,
-            background=self.color_var.get(),
-        )
-        button_color.grid(
+        label_glowcolor = self.settings.label(frame, text="Glow")
+        label_skincolor = self.settings.label(frame, text="Skin")
+        label_dullcolor = self.settings.label(frame, text="Dull")
+        label_glowcolor.grid(
             row=i,
-            column=1,
-            columnspan=4,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=self.padding,
+            pady=self.padding,
+        )
+        label_skincolor.grid(
+            row=i,
+            column=2,
+            columnspan=2,
+            sticky="ew",
+            padx=self.padding,
+            pady=self.padding,
+        )
+        label_dullcolor.grid(
+            row=i,
+            column=4,
+            columnspan=2,
+            sticky="ew",
+            padx=self.padding,
+            pady=self.padding,
+        )
+        i += 1
+
+        button_glowcolor = self.settings.button(
+            frame,
+            text=self.glowcolor_var.get(),
+            command=pick_glowcolor,
+            background=self.glowcolor_var.get(),
+        )
+        button_skincolor = self.settings.button(
+            frame,
+            text=self.skincolor_var.get(),
+            command=pick_skincolor,
+            background=self.skincolor_var.get(),
+        )
+        button_dullcolor = self.settings.button(
+            frame,
+            text=self.dullcolor_var.get(),
+            command=pick_dullcolor,
+            background=self.dullcolor_var.get(),
+        )
+        button_glowcolor.grid(
+            row=i,
+            column=0,
+            columnspan=2,
+            sticky="we",
+            padx=self.padding,
+            pady=self.padding,
+        )
+        button_skincolor.grid(
+            row=i,
+            column=2,
+            columnspan=2,
+            sticky="we",
+            padx=self.padding,
+            pady=self.padding,
+        )
+        button_dullcolor.grid(
+            row=i,
+            column=4,
+            columnspan=2,
             sticky="we",
             padx=self.padding,
             pady=self.padding,
@@ -471,13 +830,14 @@ class ImpFactory:
             pady=self.padding,
         )
 
-        button_save = self.settings.button(
+        button_add2grid = self.settings.button(
             frame,
-            text="Save",
-            command=save_button_press,
+            text="Add to Grid",
+            command=add2grid_button_press,
             background=self.settings.get_style_accentcolor(),
+            state="disable",
         )
-        button_save.grid(
+        button_add2grid.grid(
             row=i,
             column=4,
             columnspan=2,
@@ -485,11 +845,9 @@ class ImpFactory:
             padx=self.padding,
             pady=self.padding,
         )
-        button_save["state"] = "disabled"
         i += 1
 
     def run_imp_gen_IU(self):
-        global imp
         app = tools.ImparianApp("Imp Generator", self.settings, minwidth=700)
         app.title("Imp Generator")
 

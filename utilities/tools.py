@@ -1,3 +1,4 @@
+import random
 import sys
 import tkinter as tk
 from tkinter import ttk
@@ -5,9 +6,20 @@ from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter import messagebox
 from pathlib import Path
 
+# region File Ops
 
 def open_file(str):
     return open(str, "r").read().split("\n")
+
+
+def append_file(text, path):
+    with open(path, "a") as file:
+        file.write(text)
+
+
+def overwrite_file(text, path):
+    with open(path, "w") as file:
+        file.write(text)
 
 
 def load_resource(path):
@@ -20,6 +32,43 @@ def if_not_exist_make_folder(path):
     full_path = Path(path)
     if not full_path.exists():
         full_path.mkdir()
+
+
+# endregion
+
+
+class Color:
+    def __init__(self, color_str: str):
+        if self.is_valid_hex_code(color_str):
+            self.color = color_str
+        else:
+            self.color = "#000000"
+            print(f"Invalid color: {color_str}")
+
+    def is_valid_hex_code(self, color_str):
+        if color_str[0] != "#":
+            return False
+
+        if not (len(color_str) == 4 or len(color_str) == 7):
+            return False
+
+        for i in range(1, len(color_str)):
+            if not (
+                (color_str[i] >= "0" and color_str[i] <= "9")
+                or (color_str[i] >= "a" and color_str[i] <= "f")
+                or (color_str[i] >= "A" or color_str[i] <= "F")
+            ):
+                return False
+
+        return True
+
+    def __str__(self):
+        return self.color
+
+    @classmethod
+    def get_random_color(self):
+        r = lambda: random.randint(0, 255)
+        return Color("#%02X%02X%02X" % (r(), r(), r()))
 
 
 class Keys:
@@ -242,7 +291,7 @@ class Settings:
         frame_canvas.grid_columnconfigure(0, weight=1)
         canvas = self.canvas(frame_canvas, background=self.get_style_secondarycolor())
         canvas.grid(row=0, column=0, columnspan=2, sticky="news")
-        #TODO: Theme Scrollbar
+        # TODO: Theme Scrollbar
         vsb = ttk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
         vsb.grid(row=0, column=2, sticky="ns")
         canvas.configure(yscrollcommand=vsb.set)
@@ -262,7 +311,11 @@ class Settings:
             # TODO: Add support for different kinds of inputs:
             #   [] Yes/no
             #   [] File/folder location/name
-            labels.append(self.label(grid_frame, k,foreground=self.get_style_secondarytextcolor()))
+            labels.append(
+                self.label(
+                    grid_frame, k, foreground=self.get_style_secondarytextcolor()
+                )
+            )
             labels[i].grid(row=i, column=0, sticky="w", padx=padding, pady=padding)
             textvariables.append(tk.StringVar(grid_frame, v))
             textvariables[i].trace_add("write", enable_save)
@@ -463,7 +516,7 @@ class Settings:
 
     def get_style_secondarytextcolor(self):
         return self.get_setting(Keys.SECONDARY_TEXT_COLOR)
-    
+
     def get_style_secondarycolor(self):
         return self.get_setting(Keys.SECONDARY_COLOR)
 
@@ -496,7 +549,14 @@ class Settings:
 
 # region Imparian Base App
 class ImparianApp(tk.Tk):
-    def __init__(self, title: str, settings:Settings=None, has_settings_edit=False, minwidth=0, minheight=0):
+    def __init__(
+        self,
+        title: str,
+        settings: Settings = None,
+        has_settings_edit=False,
+        minwidth=0,
+        minheight=0,
+    ):
         super().__init__()
         self.next_row = 0
         if settings == None:
