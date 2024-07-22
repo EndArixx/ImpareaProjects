@@ -3,20 +3,37 @@ import random
 import string
 import tkinter as tk
 from tkinter import colorchooser
+from typing import List
 import utilities.tools as tools
 
 
 class Imp:
-    def __init__(self, name, adjective, flavor, noun, pronouns, color):
+    def __init__(self, name:str, adjective:str, flavor:str, noun:str, pronouns:str, color:str):
         self.name = name
-
         self.adjective = adjective
         self.flavor = flavor
         self.noun = noun
         self.transform = lambda: f"{self.adjective}! {self.flavor}! {self.noun}!"
-
         self.pronouns = pronouns
         self.color = color
+        #name,adjective,flavor,noun,pronoun,color
+        self.filestring = lambda: f"{self.name},{self.adjective},{self.flavor},{self.noun},{self.pronouns},{self.color}" 
+    
+    @classmethod
+    def create_imp_from_filestring(self, filestring):
+        if filestring[0] == "#":
+            return None
+        data = filestring.split(",")
+        if len(data) != 6:
+            print(f"Error, filestring could not be parsed:\n {filestring}")
+            return None
+
+        imp = Imp(data[0], data[1], data[2], data[3], data[4], data[5])
+        
+        return imp
+    
+
+
 
     def __str__(self):
         return f"   Name: {self.name}\n   Transform: {self.transform()}\n   Pronouns: {self.pronouns}\n   Color: {self.color}"
@@ -36,6 +53,9 @@ class ImpFactory:
         self.adjectives = tools.load_resource("data/adjectives.csv")
         self.nouns = tools.load_resource("data/nouns.csv")
         self.alphabet = string.ascii_lowercase
+        self.imps_file_path = self.settings.get_imps_save()
+
+        self.imps = self.load_imps_from_file()
 
         self.padding = self.settings.get_style_padding()
 
@@ -97,13 +117,36 @@ class ImpFactory:
 
         self.settings.print_debug(f"Generating Random Imp:\n{imp}")
         return imp
+    
+    #region File Stuph
 
-    def save_imp(self, export_imp: Imp):
-        exportPath = self.settings.get_imps_save()
-        with open(exportPath, "a+") as f:
-            f.write(
-                f"{export_imp.name},{export_imp.transform},{export_imp.pronouns},{export_imp.color}\n"
-            )
+    def create_imp_file(self):
+        #TODO add functionality
+        self.settings.print_debug("Creating imp file.")
+
+    def save_imps_to_file(self):
+        #TODO add functionality
+        self.settings.print_debug("Saving all imps")
+
+    def update_imp_byname(self, name:str):
+        #TODO add functionality
+        self.settings.print_debug(f"updating {name}")
+
+
+    def load_imps_from_file(self) -> List[Imp]:
+        self.settings.print_debug(f"Loading Imps!\n  '{self.imps_file_path}'")
+
+        imps = []
+        data = tools.open_file(self.imps_file_path)
+        for i in data:
+            imp = Imp.create_imp_from_filestring(i)
+            if imp is not None:
+                self.settings.print_debug(f"    {imp.name} Loaded.")
+                imps.append(imp)
+
+        return imps
+    
+    # endregion 
 
     # region UI zones
 
@@ -202,14 +245,17 @@ class ImpFactory:
     def imp_grid_zone(self, frame):
         # TODO implemement
         frame.grid_columnconfigure(0, weight=1)
+        grid = self.settings.frame(frame)
+        i=0
+        imp_grid = []
+        for imp in self.imps:
+            lbl = self.settings.label(grid, imp.name)
+            lbl.grid(row=i, column=0)
 
-        DUMMY = self.settings.label(
-            frame,
-            "THIS IS AN IMP PLACEHOLDER!",
-            background=self.settings.get_style_warningcolor(),
-            foreground=self.settings.get_style_warningtextcolor(),
-        )
-        DUMMY.grid(row=0, column=0, sticky="news", padx=self.padding, pady=self.padding)
+            imp_grid.append(lbl)
+            i+=1
+        
+
 
     def imp_edit_zone(self, frame, imp: Imp):
         self.name_var = tk.StringVar(frame, imp.name)
@@ -448,7 +494,7 @@ class ImpFactory:
         app.title("Imp Generator")
 
         frame = app.add_frame(row=1)
-        self.imp_management_zone(frame, tag=Tags.edit_tag)
+        self.imp_management_zone(frame, tag=Tags.grid_tag)
 
         frame.mainloop()
 
