@@ -546,6 +546,15 @@ class Settings:
 
     # endregion
 
+class has_state_warning:
+    def get_warning_flag(self) -> bool:
+        """returns the flag."""
+        pass
+
+    def fire_warning(self) -> bool:
+        """Runs the nessisary checks then return continue check."""
+        pass
+        
 
 # region Imparian Base App
 class ImparianApp(tk.Tk):
@@ -554,6 +563,7 @@ class ImparianApp(tk.Tk):
         title: str,
         settings: Settings = None,
         has_settings_edit=False,
+        close_warnings:list[has_state_warning]=[],
         minwidth=0,
         minheight=0,
     ):
@@ -569,6 +579,7 @@ class ImparianApp(tk.Tk):
         self.overrideredirect(1)
         self.attributes("-topmost", True)
         self.grid_columnconfigure(0, weight=1)
+        self.close_warnings = close_warnings
 
         # TODO: Add logic to ovveride the default fonts with the settings fonts.
         # self.defaultFont = font.nametofont("TkDefaultFont")
@@ -593,7 +604,12 @@ class ImparianApp(tk.Tk):
         self.geometry("+%s+%s" % (x, y))
 
     def exit(self):
-        self.destroy()
+        close = True
+        for x in self.close_warnings:
+            if x.get_warning_flag():
+                close = close and x.fire_warning()
+        if close():
+            self.destroy()
 
     def top_menu(self, frame, title, has_settings_edit):
         frame.bind("<Button-1>", self.startMove)

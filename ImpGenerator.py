@@ -79,7 +79,7 @@ class Tags:
     grid_tag = "SHOW_GRID"
 
 
-class ImpFactory:
+class ImpFactory(tools.has_state_warning):
     def __init__(self, settings=None):
         if settings is None:
             settings = tools.Settings()
@@ -92,6 +92,8 @@ class ImpFactory:
 
         self.edit_imp = Imp.get_empi()
         self.imps = self.load_imps_from_file()
+
+        self.has_grid_changes_warning = False
 
         self.padding = self.settings.get_style_padding()
 
@@ -153,12 +155,14 @@ class ImpFactory:
     # region File Stuph
 
     def save_imps_to_file(self):
+        # TODO: add save as.
         self.settings.print_debug("Saving all imps")
         text = "#name,adjective,flavor,noun,pronoun,glowcolor,skincolor,dullcolor\n"
         for imp in self.imps.values():
             text += f"{imp.filestring()}\n"
 
         tools.overwrite_file(text, self.settings.get_imps_save())
+        self.turn_off_warning()
 
     def load_imps_from_file(self) -> Dict[str, Imp]:
         self.settings.print_debug(f"Loading Imps!\n  '{self.imps_file_path}'")
@@ -171,6 +175,56 @@ class ImpFactory:
                 self.settings.print_debug(f"    {imp.name} Loaded.")
                 imps[imp.name] = imp
         return imps
+
+    # endregion
+
+    # region State warning methods
+    #TODO: make work!
+    def get_warning_flag(self) -> bool:
+        print("warning!")
+        return self.has_grid_changes_warning
+
+    def fire_warning(self) -> bool:
+        if self.has_grid_changes_warning:
+            result = tk.messagebox.askyesno(
+                title=f"Unsaved changes to Imp Grid.",
+                message=f"Are you sure you wish to close with unsaved Imp changes?",
+                icon="warning",
+            )
+            return result == "yes"
+        return True
+
+    def change_warning(self, bool: bool):
+        self.has_grid_changes_warning = bool
+
+        if bool:
+            self.button_save_imps.configure(
+                {"background": self.settings.get_style_warningcolor()}
+            )
+            self.button_save_imps.configure(
+                {"foreground": self.settings.get_style_warningtextcolor()}
+            )
+            self.button_save_imps.configure(
+                {"font": self.settings.get_style_headerfont()}
+            )
+        else:
+            self.button_save_imps.configure(
+                {"background": self.settings.get_style_secondarycolor()}
+            )
+            self.button_save_imps.configure(
+                {"foreground": self.settings.get_style_secondarytextcolor()}
+            )
+            self.button_save_imps.configure(
+                {"font": self.settings.get_style_textfont()}
+            )
+
+        self.button_save_imps.grid()
+
+    def turn_on_warning(self):
+        self.change_warning(True)
+
+    def turn_off_warning(self):
+        self.change_warning(False)
 
     # endregion
 
@@ -197,34 +251,32 @@ class ImpFactory:
             pady=self.padding,
         )
         return frame
-    
-    def turn_off(self, button, frame):
+
+    def turn_off_button(self, button, frame):
         button.configure({"background": self.settings.get_style_secondarycolor()})
-        button.configure(
-            {"foreground": self.settings.get_style_secondarytextcolor()}
-        )
+        button.configure({"foreground": self.settings.get_style_secondarytextcolor()})
         button.configure({"font": self.settings.get_style_textfont()})
         frame.grid_remove()
 
-    def turn_on(self, button, frame):
+    def turn_on_button(self, button, frame):
         frame.grid()
         button.configure({"background": self.settings.get_style_primarycolor()})
         button.configure({"foreground": self.settings.get_style_primarytextcolor()})
         button.configure({"font": self.settings.get_style_headerfont()})
 
     def open_panel(self, tag):
-        self.turn_off(self.button_edit_imp, self.edit_frame)
-        self.turn_off(self.button_show_imps, self.grid_frame)
+        self.turn_off_button(self.button_edit_imp, self.edit_frame)
+        self.turn_off_button(self.button_show_imps, self.grid_frame)
 
         if tag == self.tab_var.get():
             self.tab_var.set("")
         else:
             match tag:
                 case Tags.edit_tag:
-                    self.turn_on(self.button_edit_imp, self.edit_frame)
+                    self.turn_on_button(self.button_edit_imp, self.edit_frame)
 
                 case Tags.grid_tag:
-                    self.turn_on(self.button_show_imps, self.grid_frame)
+                    self.turn_on_button(self.button_show_imps, self.grid_frame)
 
             self.tab_var.set(tag)
 
@@ -288,7 +340,6 @@ class ImpFactory:
             self.load_vars_from_imp(imp)
             self.open_panel(Tags.edit_tag)
 
-
         def delete(target):
             result = tk.messagebox.askyesno(
                 title=f"Delete {target}",
@@ -299,7 +350,9 @@ class ImpFactory:
                     self.settings.print_debug(f"  Removed {target} from grid")
                     self.refreshgrid()
                 else:
-                    self.settings.print_debug(f"ERROR: Failed to remove {target} from grid")
+                    self.settings.print_debug(
+                        f"ERROR: Failed to remove {target} from grid"
+                    )
 
         for imp in self.imps.values():
             row = []
@@ -361,12 +414,12 @@ class ImpFactory:
                 self.settings.button(
                     self.imp_frame,
                     "✎",
-                    command=lambda target= imp.name: edit(target),
+                    command=lambda target=imp.name: edit(target),
                     foreground=self.settings.get_style_primarytextcolor(),
                     background=self.settings.get_style_primarycolor(),
                     borderwidth=1,
                     relief="solid",
-                    font= self.settings.get_style_headerfont(),
+                    font=self.settings.get_style_headerfont(),
                 )
             )
             row[6].grid(row=i, column=6, sticky="news")
@@ -375,12 +428,12 @@ class ImpFactory:
                 self.settings.button(
                     self.imp_frame,
                     "🗑",
-                    command=lambda target= imp.name: delete(target),
+                    command=lambda target=imp.name: delete(target),
                     foreground=self.settings.get_style_primarytextcolor(),
                     background=self.settings.get_style_primarycolor(),
                     borderwidth=1,
                     relief="solid",
-                    font= self.settings.get_style_headerfont(),
+                    font=self.settings.get_style_headerfont(),
                 )
             )
             row[7].grid(row=i, column=7, sticky="news")
@@ -398,7 +451,9 @@ class ImpFactory:
         for i in range(zone_columns):
             frame.grid_columnconfigure(zone_columns, weight=1)
 
-        self.imp_frame = self.settings.frame(frame)
+        self.imp_frame = self.settings.frame(
+            frame, background=self.settings.get_style_inputcolor()
+        )
         for i in range(grid_columns):
             self.imp_frame.grid_columnconfigure(i, weight=1)
 
@@ -411,7 +466,6 @@ class ImpFactory:
             borderwidth=1,
             relief="solid",
             width=headerwidth,
-            
         )
         label_header_name.grid(row=0, column=0, sticky="ew")
 
@@ -486,7 +540,6 @@ class ImpFactory:
         )
         label_header_functions.grid(row=0, column=6, columnspan=2, sticky="ew")
 
-
         self.refreshgrid()
         self.imp_frame.grid(
             row=0,
@@ -497,14 +550,14 @@ class ImpFactory:
             pady=self.padding,
         )
 
-        button_save_imps = self.settings.button(
+        self.button_save_imps = self.settings.button(
             frame,
             "Save Imps",
             self.save_imps_to_file,
             background=secondary_color,
             foreground=secondary_text_color,
         )
-        button_save_imps.grid(
+        self.button_save_imps.grid(
             row=1,
             column=zone_columns - 1,
             sticky="ew",
@@ -542,7 +595,10 @@ class ImpFactory:
 
         def add2grid_button_press():
             if can_add2grid():
-                self.imps[self.edit_imp.name] = Imp.create_imp_from_filestring(self.edit_imp.filestring())
+                self.turn_on_warning()
+                self.imps[self.edit_imp.name] = Imp.create_imp_from_filestring(
+                    self.edit_imp.filestring()
+                )
                 self.load_vars_from_imp(Imp.get_empi())
                 update_selected_imp()
                 self.refreshgrid()
@@ -590,7 +646,7 @@ class ImpFactory:
 
             if self.name_var.get() in self.imps.keys():
                 button_add2grid["text"] = "Update Grid"
-            else: 
+            else:
                 button_add2grid["text"] = "Add to Grid"
             if can_add2grid():
                 button_add2grid["state"] = "normal"
@@ -848,7 +904,10 @@ class ImpFactory:
         i += 1
 
     def run_imp_gen_IU(self):
-        app = tools.ImparianApp("Imp Generator", self.settings, minwidth=700)
+
+        app = tools.ImparianApp(
+            "Imp Generator", self.settings, minwidth=700, close_warnings=[self]
+        )
         app.title("Imp Generator")
 
         frame = app.add_frame(row=1)
