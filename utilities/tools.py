@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import random
 import sys
 import tkinter as tk
@@ -70,6 +71,11 @@ class Color:
         r = lambda: random.randint(0, 255)
         return Color("#%02X%02X%02X" % (r(), r(), r()))
 
+class close_warning(ABC):
+    @abstractmethod
+    def fire_warning(self) -> bool:
+        """Runs the nessisary checks then return continue check."""
+        pass
 
 class Keys:
     COMIC_FOLDER = "COMIC_FOLDER"
@@ -92,13 +98,14 @@ class Keys:
     PADDING = "PADDING"
 
 
-class Settings:
+class Settings(close_warning):
     def __init__(self):
         self.settingLocation = Path.home() / "AppData/Roaming/ImpProjects"
         self.settingsFile = self.settingLocation / "settings"
         self.data = {}
         self.load_settings()
         self.in_debug_Mode = self.get_setting_is_on(Keys.DEBUG_MODE)
+        self.has_changes = False
 
     def print_debug(self, str):
         if self.get_setting_is_on(Keys.DEBUG_MODE):
@@ -227,8 +234,19 @@ class Settings:
     # endregion
 
     # region Grid UI
+    def fire_warning(self) -> bool:
+        if self.has_changes:
+            result = tk.messagebox.askyesno(
+                title=f"Unsaved settings.",
+                message=f"Are you sure you wish to close with unsaved changes?",
+                icon="warning",
+            )
+            if not result:
+                return False
+        return True
+
     def open_settings(self):
-        root = ImparianApp("Settings", self, minwidth=600)
+        root = ImparianApp("Settings", self, minwidth=600, close_warnings=[self])
 
         grid = root.add_frame()
 
@@ -259,8 +277,10 @@ class Settings:
         def enable_save(*args):
             if validate_data():
                 save_button["state"] = "normal"
+                self.has_changes = True
             else:
                 save_button["state"] = "disable"
+                self.has_changes = False
 
         def save():
             result = tk.messagebox.askyesno(
@@ -546,16 +566,6 @@ class Settings:
 
     # endregion
 
-class has_state_warning:
-    def get_warning_flag(self) -> bool:
-        """returns the flag."""
-        pass
-
-    def fire_warning(self) -> bool:
-        """Runs the nessisary checks then return continue check."""
-        pass
-        
-
 # region Imparian Base App
 class ImparianApp(tk.Tk):
     def __init__(
@@ -563,7 +573,7 @@ class ImparianApp(tk.Tk):
         title: str,
         settings: Settings = None,
         has_settings_edit=False,
-        close_warnings:list[has_state_warning]=[],
+        close_warnings:list[close_warning]=[],
         minwidth=0,
         minheight=0,
     ):
@@ -604,12 +614,10 @@ class ImparianApp(tk.Tk):
         self.geometry("+%s+%s" % (x, y))
 
     def exit(self):
-        close = True
         for x in self.close_warnings:
-            if x.get_warning_flag():
-                close = close and x.fire_warning()
-        if close():
-            self.destroy()
+            if not x.fire_warning():
+                return
+        self.destroy()
 
     def top_menu(self, frame, title, has_settings_edit):
         frame.bind("<Button-1>", self.startMove)
@@ -646,7 +654,7 @@ class ImparianApp(tk.Tk):
         exit_button = tk.Button(
             frame,
             text="✕",
-            command=self.destroy,
+            command=self.exit,
             background=self.settings.get_style_primarytextcolor(),
             foreground=self.settings.get_style_primarycolor(),
             font=self.settings.get_style_headerfont(),

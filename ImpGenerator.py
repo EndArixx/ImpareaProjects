@@ -79,7 +79,7 @@ class Tags:
     grid_tag = "SHOW_GRID"
 
 
-class ImpFactory(tools.has_state_warning):
+class ImpFactory(tools.close_warning):
     def __init__(self, settings=None):
         if settings is None:
             settings = tools.Settings()
@@ -178,11 +178,7 @@ class ImpFactory(tools.has_state_warning):
 
     # endregion
 
-    # region State warning methods
-    #TODO: make work!
-    def get_warning_flag(self) -> bool:
-        print("warning!")
-        return self.has_grid_changes_warning
+    # region Warning methods
 
     def fire_warning(self) -> bool:
         if self.has_grid_changes_warning:
@@ -191,7 +187,8 @@ class ImpFactory(tools.has_state_warning):
                 message=f"Are you sure you wish to close with unsaved Imp changes?",
                 icon="warning",
             )
-            return result == "yes"
+            if not result:
+                return False
         return True
 
     def change_warning(self, bool: bool):

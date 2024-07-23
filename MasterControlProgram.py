@@ -9,6 +9,8 @@ from ImpGenerator import *
 
 VERSION = "v0.2.5"
 settings = tools.Settings()
+imp_factory = ImpFactory(settings)
+
 # Load Styles
 PROGRAM_NAME = settings.get_program_name()
 PRIMARY_TEXT_COLOR = settings.get_style_primarytextcolor()
@@ -95,7 +97,6 @@ def generate_page_zone(frame):
 
 
 def imp_management_zone(frame):
-    imp_factory = ImpFactory(settings)
     frame.grid_columnconfigure(0, weight=1)
 
     zone_label = get_zone_header(frame, title="Imps")
@@ -271,6 +272,7 @@ def execute_primary_function():
         settings,
         True,
         minwidth=700,
+        close_warnings=[imp_factory]
     )
 
     # Generate New Page
