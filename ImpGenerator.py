@@ -990,7 +990,7 @@ class ImpFactory(tools.close_warning):
     def run_imp_gen_IU(self):
 
         app = tools.ImparianApp(
-            "Imp Generator", self.settings, minwidth=700, maxheight=100, close_warnings=[self]
+            "Imp Generator", self.settings, minwidth=700, close_warnings=[self]
         )
         app.title("Imp Generator")
 
