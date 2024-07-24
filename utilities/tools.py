@@ -106,6 +106,7 @@ class Settings(close_warning):
         self.load_settings()
         self.in_debug_Mode = self.get_setting_is_on(Keys.DEBUG_MODE)
         self.has_changes = False
+        self.padding = self.get_style_padding()
 
     def print_debug(self, str):
         if self.get_setting_is_on(Keys.DEBUG_MODE):
@@ -258,7 +259,6 @@ class Settings(close_warning):
         labels = []
         textvariables = []
         entries = []
-        padding = self.get_style_padding()
 
         def validate_data():
             # TODO add validation!
@@ -299,32 +299,7 @@ class Settings(close_warning):
         frame.grid_columnconfigure(0, weight=1)
         frame.grid_columnconfigure(1, weight=1)
 
-        grid_dummy = self.label(frame, "")
-        grid_dummy.grid(row=0, column=0, columnspan=2)
-        grid_dummy.update()
-
-        frame_canvas = self.frame(frame)
-        frame_canvas.grid(
-            row=1, column=0, columnspan=2, sticky="news", padx=padding, pady=padding
-        )
-        frame_canvas.grid_rowconfigure(0, weight=1)
-        frame_canvas.grid_columnconfigure(0, weight=1)
-        canvas = self.canvas(frame_canvas, background=self.get_style_secondarycolor())
-        canvas.grid(row=0, column=0, columnspan=2, sticky="news")
-        # TODO: Theme Scrollbar
-        vsb = ttk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
-        vsb.grid(row=0, column=2, sticky="ns")
-        canvas.configure(yscrollcommand=vsb.set)
-        grid_frame = self.frame(canvas)
-        canvas.create_window((0, 0), window=grid_frame, anchor="nw")
-        grid_height = len(self.data.items()) * (
-            grid_dummy.winfo_height() + (int(padding) * 2)
-        )
-        grid_frame.config(height=grid_height)
-        canvas.config(scrollregion=canvas.bbox("all"))
-        grid_frame.grid_columnconfigure(0, weight=0)
-        grid_frame.grid_columnconfigure(1, weight=1)
-        grid_dummy.grid_remove()
+        grid_frame = self.scrollable_frame(frame,self.data,0,0,2)
 
         i = 0
         for k, v in self.data.items():
@@ -336,11 +311,11 @@ class Settings(close_warning):
                     grid_frame, k, foreground=self.get_style_secondarytextcolor()
                 )
             )
-            labels[i].grid(row=i, column=0, sticky="w", padx=padding, pady=padding)
+            labels[i].grid(row=i, column=0, sticky="w", padx=self.padding, pady=self.padding)
             textvariables.append(tk.StringVar(grid_frame, v))
             textvariables[i].trace_add("write", enable_save)
             entries.append(self.entry(grid_frame, textvariables[i], width=32))
-            entries[i].grid(row=i, column=1, sticky="ew", padx=padding, pady=padding)
+            entries[i].grid(row=i, column=1, sticky="ew", padx=self.padding, pady=self.padding)
             i += 1
 
         def reset():
@@ -354,7 +329,7 @@ class Settings(close_warning):
             state="normal",
             background=self.get_style_accentcolor(),
         )
-        reset_button.grid(column=0, row=2, sticky="e", padx=padding, pady=padding)
+        reset_button.grid(column=0, row=2, sticky="e", padx=self.padding, pady=self.padding)
 
         save_button = self.button(
             frame,
@@ -363,11 +338,52 @@ class Settings(close_warning):
             state="disable",
             background=self.get_style_accentcolor(),
         )
-        save_button.grid(column=1, row=2, sticky="w", padx=padding, pady=padding)
+        save_button.grid(column=1, row=2, sticky="w", padx=self.padding, pady=self.padding)
 
     # endregion
 
     # region Widget Overrides
+
+    def scrollable_frame(self,
+        root,
+        data,
+        row,
+        column,
+        columnspan=1,
+        background=None,
+        *args,
+        **kwargs,
+    ):
+        
+        grid_dummy = self.label(root, "")
+        grid_dummy.grid(row=0, column=0)
+        grid_dummy.update()
+
+        frame_canvas = self.frame(root)
+        frame_canvas.grid(
+            row=row, column=column, columnspan=columnspan, sticky="news", padx=self.padding, pady=self.padding
+        )
+        frame_canvas.grid_rowconfigure(0, weight=1)
+        frame_canvas.grid_columnconfigure(0, weight=1)
+        canvas = self.canvas(frame_canvas, background=self.get_style_secondarycolor())
+        canvas.grid(row=row, column=column, columnspan=columnspan, sticky="news")
+        # TODO: Theme Scrollbar
+        vsb = ttk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
+        vsb.grid(row=0, column=2, sticky="ns")
+        canvas.configure(yscrollcommand=vsb.set)
+        grid_frame = self.frame(canvas,background)
+        canvas.create_window((0, 0), window=grid_frame, anchor="nw")
+        grid_height = len(data.items()) * (
+            grid_dummy.winfo_height() + (int(self.padding) * 2)
+        )
+        grid_frame.config(height=grid_height)
+        canvas.config(scrollregion=canvas.bbox("all"))
+        grid_frame.grid_columnconfigure(0, weight=0)
+        grid_frame.grid_columnconfigure(1, weight=1)
+        grid_dummy.grid_remove()
+
+        return grid_frame
+        
 
     def frame(
         self,

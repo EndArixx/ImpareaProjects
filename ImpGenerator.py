@@ -3,6 +3,7 @@ import random
 import string
 import tkinter as tk
 from tkinter import colorchooser
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 from typing import Dict, List
 import utilities.tools as tools
 
@@ -79,6 +80,9 @@ class Tags:
     grid_tag = "SHOW_GRID"
 
 
+IMP_FILE_FORMAT = ".csv"
+
+
 class ImpFactory(tools.close_warning):
     def __init__(self, settings=None):
         if settings is None:
@@ -87,21 +91,21 @@ class ImpFactory(tools.close_warning):
         self.flavors = tools.load_resource("data/flavors.csv")
         self.adjectives = tools.load_resource("data/adjectives.csv")
         self.nouns = tools.load_resource("data/nouns.csv")
+        self.pronouns = tools.load_resource("data/pronouns.csv")
         self.alphabet = string.ascii_lowercase
-        self.imps_file_path = self.settings.get_imps_save()
-
+        self.imps_primaryfile = self.settings.get_imps_save()
+        self.grid_columns = []
         self.edit_imp = Imp.get_empi()
-        self.imps = self.load_imps_from_file()
+        self.imps = {}
+        self.load_imps_from_primaryfile()
 
         self.has_grid_changes_warning = False
 
         self.padding = self.settings.get_style_padding()
 
-        self.grid_columns = []
-
     # region Gets
     def get_pronouns(self):
-        return choice(["She/Her", "He/Him", "They/Them", "Ask"])
+        return choice(self.pronouns)
 
     def get_255(self):
         return random.randint(0, 255)
@@ -154,27 +158,55 @@ class ImpFactory(tools.close_warning):
 
     # region File Stuph
 
-    def save_imps_to_file(self):
-        # TODO: add save as.
-        self.settings.print_debug("Saving all imps")
+    def save_imps_to_fileprompt(self):
+        url = asksaveasfilename(
+            title="Save Imps to CSV", filetypes=[("CSV files", f"*{IMP_FILE_FORMAT}")]
+        )
+        if url:
+            if url[-4:] != IMP_FILE_FORMAT:
+                url = url + IMP_FILE_FORMAT
+            self.save_imps_to_file(url)
+
+    def save_imps_to_primaryfile(self):
+        self.save_imps_to_file(self.imps_primaryfile)
+
+    def save_imps_to_file(self, file):
+        self.settings.print_debug(f"Saving Imps to '{file}'.")
         text = "#name,adjective,flavor,noun,pronoun,glowcolor,skincolor,dullcolor\n"
         for imp in self.imps.values():
             text += f"{imp.filestring()}\n"
-
-        tools.overwrite_file(text, self.settings.get_imps_save())
+        tools.overwrite_file(text, file)
         self.turn_off_warning()
 
-    def load_imps_from_file(self) -> Dict[str, Imp]:
-        self.settings.print_debug(f"Loading Imps!\n  '{self.imps_file_path}'")
+    def load_imps_from_fileprompt(self):
+        url = askopenfilename(
+            title="Import Imp CSV", filetypes=[("CSV files", f"*{IMP_FILE_FORMAT}")]
+        )
+        if url:
+            self.load_imps_from_file(url)
+            self.refreshgrid()
 
-        imps = {}
-        data = tools.open_file(self.imps_file_path)
+    def load_imps_from_primaryfile(self):
+        self.load_imps_from_file(self.imps_primaryfile)
+
+    def load_imps_from_file(self, file):
+        self.settings.print_debug(f"Loading Imps!\n  '{file}'")
+
+        data = tools.open_file(file)
         for i in data:
             imp = Imp.create_imp_from_filestring(i)
             if imp is not None:
+                if imp.name in self.imps:
+                    #todo, add YesToAll and NoToAll
+                    result = tk.messagebox.askyesno(
+                        title=f"Override Imp?",
+                        message=f"Do you want to override {imp.name}?\n {imp}",
+                    )
+                    if not result:
+                        self.settings.print_debug(f"    {imp.name} Skipped.")
+                        continue
+                self.imps[imp.name] = imp
                 self.settings.print_debug(f"    {imp.name} Loaded.")
-                imps[imp.name] = imp
-        return imps
 
     # endregion
 
@@ -195,27 +227,45 @@ class ImpFactory(tools.close_warning):
         self.has_grid_changes_warning = bool
 
         if bool:
-            self.button_save_imps.configure(
+            self.button_save_grid.configure(
                 {"background": self.settings.get_style_warningcolor()}
             )
-            self.button_save_imps.configure(
+            self.button_save_grid.configure(
                 {"foreground": self.settings.get_style_warningtextcolor()}
             )
-            self.button_save_imps.configure(
+            self.button_save_grid.configure(
+                {"font": self.settings.get_style_headerfont()}
+            )
+            self.button_save_grid_as.configure(
+                {"background": self.settings.get_style_warningcolor()}
+            )
+            self.button_save_grid_as.configure(
+                {"foreground": self.settings.get_style_warningtextcolor()}
+            )
+            self.button_save_grid_as.configure(
                 {"font": self.settings.get_style_headerfont()}
             )
         else:
-            self.button_save_imps.configure(
+            self.button_save_grid.configure(
                 {"background": self.settings.get_style_secondarycolor()}
             )
-            self.button_save_imps.configure(
+            self.button_save_grid.configure(
                 {"foreground": self.settings.get_style_secondarytextcolor()}
             )
-            self.button_save_imps.configure(
+            self.button_save_grid.configure(
+                {"font": self.settings.get_style_textfont()}
+            )
+            self.button_save_grid_as.configure(
+                {"background": self.settings.get_style_secondarycolor()}
+            )
+            self.button_save_grid_as.configure(
+                {"foreground": self.settings.get_style_secondarytextcolor()}
+            )
+            self.button_save_grid_as.configure(
                 {"font": self.settings.get_style_textfont()}
             )
 
-        self.button_save_imps.grid()
+        self.button_save_grid.grid()
 
     def turn_on_warning(self):
         self.change_warning(True)
@@ -447,10 +497,17 @@ class ImpFactory(tools.close_warning):
 
         for i in range(zone_columns):
             frame.grid_columnconfigure(zone_columns, weight=1)
-
-        self.imp_frame = self.settings.frame(
-            frame, background=self.settings.get_style_inputcolor()
+        #TODO: make this actually work!
+        self.imp_frame = self.settings.scrollable_frame(
+            frame,
+            data=self.imps,
+            height=100,
+            row=0,
+            column=0,
+            columnspan=zone_columns,
+            background=self.settings.get_style_inputcolor(),
         )
+
         for i in range(grid_columns):
             self.imp_frame.grid_columnconfigure(i, weight=1)
 
@@ -547,14 +604,44 @@ class ImpFactory(tools.close_warning):
             pady=self.padding,
         )
 
-        self.button_save_imps = self.settings.button(
+        self.button_import = self.settings.button(
             frame,
-            "Save Imps",
-            self.save_imps_to_file,
+            "Import Imp from CSV",
+            self.load_imps_from_fileprompt,
             background=secondary_color,
             foreground=secondary_text_color,
         )
-        self.button_save_imps.grid(
+        self.button_import.grid(
+            row=1,
+            column=0,
+            sticky="ew",
+            padx=self.padding,
+            pady=self.padding,
+        )
+
+        self.button_save_grid_as = self.settings.button(
+            frame,
+            "Save As",
+            self.save_imps_to_fileprompt,
+            background=secondary_color,
+            foreground=secondary_text_color,
+        )
+        self.button_save_grid_as.grid(
+            row=1,
+            column=zone_columns - 2,
+            sticky="ew",
+            padx=self.padding,
+            pady=self.padding,
+        )
+
+        self.button_save_grid = self.settings.button(
+            frame,
+            "Save",
+            self.save_imps_to_primaryfile,
+            background=secondary_color,
+            foreground=secondary_text_color,
+        )
+        self.button_save_grid.grid(
             row=1,
             column=zone_columns - 1,
             sticky="ew",
@@ -903,7 +990,7 @@ class ImpFactory(tools.close_warning):
     def run_imp_gen_IU(self):
 
         app = tools.ImparianApp(
-            "Imp Generator", self.settings, minwidth=700, close_warnings=[self]
+            "Imp Generator", self.settings, minwidth=700, maxheight=100, close_warnings=[self]
         )
         app.title("Imp Generator")
 
