@@ -7,8 +7,10 @@ from GenerateNewPage import *
 from ImpGenerator import *
 
 
-VERSION = "v0.2.4"
+VERSION = "v0.2.5"
 settings = tools.Settings()
+imp_factory = ImpFactory(settings)
+
 # Load Styles
 PROGRAM_NAME = settings.get_program_name()
 PRIMARY_TEXT_COLOR = settings.get_style_primarytextcolor()
@@ -69,20 +71,20 @@ def generate_page_zone(frame):
 
     zone_label = get_zone_header(frame, title="Generate New Page")
     zone_label.grid(
-        column=0, row=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING
+        row=0, column=0, columnspan=3, sticky="we", padx=PADDING, pady=PADDING
     )
 
     pagetitle_label = settings.label(
         frame,
         text="Page Title:",
     )
-    pagetitle_label.grid(column=0, row=1, sticky="w", padx=PADDING, pady=PADDING)
+    pagetitle_label.grid(row=1, column=0, sticky="w", padx=PADDING, pady=PADDING)
 
     pagetitle_entry = settings.entry(
         frame,
         textvariable=pagetitle_var,
     )
-    pagetitle_entry.grid(column=1, row=1, sticky="we", padx=PADDING, pady=PADDING)
+    pagetitle_entry.grid(row=1, column=1, sticky="we", padx=PADDING, pady=PADDING)
 
     generatepage_button = settings.button(
         frame,
@@ -94,12 +96,8 @@ def generate_page_zone(frame):
     generatepage_button.grid(column=2, row=1, sticky="e", padx=PADDING, pady=PADDING)
 
 
-def generate_imp_zone(frame):
-    def gen_imp():
-        run_imp_gen_IU()
-
-    frame.grid_columnconfigure(0, weight=0)
-    frame.grid_columnconfigure(1, weight=1)
+def imp_management_zone(frame):
+    frame.grid_columnconfigure(0, weight=1)
 
     zone_label = get_zone_header(frame, title="Imps")
     zone_label.grid(
@@ -111,13 +109,7 @@ def generate_imp_zone(frame):
         pady=PADDING,
     )
 
-    generatepage_button = settings.button(
-        frame,
-        text="Generate Imp",
-        command=gen_imp,
-        background=ACCENT_COLOR,
-    )
-    generatepage_button.grid(column=0, row=1, sticky="w", padx=PADDING, pady=PADDING)
+    imp_factory.imp_management_zone(frame)
 
 
 def collect_episodes_zone(frame):
@@ -206,9 +198,8 @@ def collect_episodes_zone(frame):
 
 def file_zone(frame):
     frame.grid_rowconfigure(0, weight=0)
-    frame.grid_columnconfigure(0, weight=0)
-    frame.grid_columnconfigure(1, weight=0)
-    frame.grid_columnconfigure(2, weight=1)
+    for i in range(4):
+        frame.grid_columnconfigure(index=i, weight=1)
 
     def disable_all():
         warning_label.grid()
@@ -243,22 +234,24 @@ def file_zone(frame):
         thread.start()
 
     zone_label = get_zone_header(frame, title="File Operations")
-    zone_label.grid(row=0, columnspan=3, padx=PADDING, pady=PADDING, sticky="we")
+    zone_label.grid(row=0, column=0, columnspan=4, padx=PADDING, pady=PADDING, sticky="we")
 
     open_comic_button = settings.button(
         frame,
         text="Open Comic Folder",
         command=open_comic_folder,
+        width=1,
     )
-    open_comic_button.grid(row=1, column=0, sticky="w", padx=PADDING, pady=PADDING)
+    open_comic_button.grid(row=1, column=0, sticky="ew", padx=PADDING, pady=PADDING)
 
     if not getattr(sys, "frozen", False) and settings.in_debug_Mode:
         create_exe_button = settings.button(
             frame,
             text="Create Executable",
             command=create_exe,
+            width=1,
         )
-        create_exe_button.grid(row=1, column=1, sticky="w", padx=PADDING, pady=PADDING)
+        create_exe_button.grid(row=1, column=1, sticky="ew", padx=PADDING, pady=PADDING)
 
     warning_label = settings.label(
         frame,
@@ -267,24 +260,28 @@ def file_zone(frame):
         background=WARNING_COLOR,
         font=HEADER_FONT,
     )
-    warning_label.grid(row=1, column=0, columnspan=3, sticky="ew")
+    warning_label.grid(row=1, column=0, columnspan=4, sticky="ew")
     warning_label.grid_remove()
 
 
 def execute_primary_function():
-    
+
     # Create the main window
     root = tools.ImparianApp(
-        f"{settings.get_program_name()} - {VERSION}", settings, True
+        f"{settings.get_program_name()} - {VERSION}",
+        settings,
+        True,
+        minwidth=975,
+        close_warnings=[imp_factory]
     )
 
     # Generate New Page
     gnp_frame = root.add_frame(background=PRIMARY_COLOR)
     generate_page_zone(gnp_frame)
 
-    # Generate Imp
-    gi_frame = root.add_frame(background=PRIMARY_COLOR)
-    generate_imp_zone(gi_frame)
+    # Imp Management
+    imp_management_frame = root.add_frame(background=PRIMARY_COLOR)
+    imp_management_zone(imp_management_frame)
 
     # Collect Episodes
     ce_frame = root.add_frame(background=CLEAR_COLOR)

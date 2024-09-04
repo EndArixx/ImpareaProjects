@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+import random
 import sys
 import tkinter as tk
 from tkinter import ttk
@@ -5,9 +7,21 @@ from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter import messagebox
 from pathlib import Path
 
+# region File Ops
+
 
 def open_file(str):
     return open(str, "r").read().split("\n")
+
+
+def append_file(text, path):
+    with open(path, "a") as file:
+        file.write(text)
+
+
+def overwrite_file(text, path):
+    with open(path, "w") as file:
+        file.write(text)
 
 
 def load_resource(path):
@@ -20,6 +34,50 @@ def if_not_exist_make_folder(path):
     full_path = Path(path)
     if not full_path.exists():
         full_path.mkdir()
+
+
+# endregion
+
+
+class Color:
+    def __init__(self, color_str: str):
+        if self.is_valid_hex_code(color_str):
+            self.color = color_str
+        else:
+            self.color = "#000000"
+            print(f"Invalid color: {color_str}")
+
+    def is_valid_hex_code(self, color_str):
+        if color_str[0] != "#":
+            return False
+
+        if not (len(color_str) == 4 or len(color_str) == 7):
+            return False
+
+        for i in range(1, len(color_str)):
+            if not (
+                (color_str[i] >= "0" and color_str[i] <= "9")
+                or (color_str[i] >= "a" and color_str[i] <= "f")
+                or (color_str[i] >= "A" or color_str[i] <= "F")
+            ):
+                return False
+
+        return True
+
+    def __str__(self):
+        return self.color
+
+    @classmethod
+    def get_random_color(self):
+        r = lambda: random.randint(0, 255)
+        return Color("#%02X%02X%02X" % (r(), r(), r()))
+
+
+class close_warning(ABC):
+    @abstractmethod
+    def fire_warning(self) -> bool:
+        """Runs the nessisary checks then return continue check."""
+        pass
 
 
 class Keys:
@@ -43,13 +101,15 @@ class Keys:
     PADDING = "PADDING"
 
 
-class Settings:
+class Settings(close_warning):
     def __init__(self):
         self.settingLocation = Path.home() / "AppData/Roaming/ImpProjects"
         self.settingsFile = self.settingLocation / "settings"
         self.data = {}
         self.load_settings()
         self.in_debug_Mode = self.get_setting_is_on(Keys.DEBUG_MODE)
+        self.has_changes = False
+        self.padding = self.get_style_padding()
 
     def print_debug(self, str):
         if self.get_setting_is_on(Keys.DEBUG_MODE):
@@ -178,8 +238,24 @@ class Settings:
     # endregion
 
     # region Grid UI
+    def fire_warning(self) -> bool:
+        if self.has_changes:
+            result = tk.messagebox.askyesno(
+                title=f"Unsaved settings.",
+                message=f"Are you sure you wish to close with unsaved changes?",
+                icon="warning",
+            )
+            if not result:
+                return False
+        return True
+
     def open_settings(self):
-        root = ImparianApp("Settings", self)
+        root = ImparianApp(
+            "Settings",
+            self,
+            minwidth=600,
+            close_warnings=[self],
+        )
 
         grid = root.add_frame()
 
@@ -191,7 +267,6 @@ class Settings:
         labels = []
         textvariables = []
         entries = []
-        padding = self.get_style_padding()
 
         def validate_data():
             # TODO add validation!
@@ -210,8 +285,10 @@ class Settings:
         def enable_save(*args):
             if validate_data():
                 save_button["state"] = "normal"
+                self.has_changes = True
             else:
                 save_button["state"] = "disable"
+                self.has_changes = False
 
         def save():
             result = tk.messagebox.askyesno(
@@ -230,45 +307,41 @@ class Settings:
         frame.grid_columnconfigure(0, weight=1)
         frame.grid_columnconfigure(1, weight=1)
 
-        grid_dummy = self.label(frame, "")
-        grid_dummy.grid(row=0, column=0, columnspan=2)
-        grid_dummy.update()
-
-        frame_canvas = self.frame(frame)
-        frame_canvas.grid(
-            row=1, column=0, columnspan=2, sticky="news", padx=padding, pady=padding
-        )
-        frame_canvas.grid_rowconfigure(0, weight=1)
-        frame_canvas.grid_columnconfigure(0, weight=1)
-        canvas = self.canvas(frame_canvas, background=self.get_style_secondarycolor())
-        canvas.grid(row=0, column=0, columnspan=2, sticky="news")
-        #TODO: Theme Scrollbar
-        vsb = ttk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
-        vsb.grid(row=0, column=2, sticky="ns")
-        canvas.configure(yscrollcommand=vsb.set)
-        grid_frame = self.frame(canvas)
-        canvas.create_window((0, 0), window=grid_frame, anchor="nw")
-        grid_height = len(self.data.items()) * (
-            grid_dummy.winfo_height() + (int(padding) * 2)
-        )
-        grid_frame.config(height=grid_height)
-        canvas.config(scrollregion=canvas.bbox("all"))
-        grid_frame.grid_columnconfigure(0, weight=0)
-        grid_frame.grid_columnconfigure(1, weight=1)
-        grid_dummy.grid_remove()
+        scrolling_frame = self.scrolling_frame(frame)
 
         i = 0
         for k, v in self.data.items():
             # TODO: Add support for different kinds of inputs:
             #   [] Yes/no
             #   [] File/folder location/name
-            labels.append(self.label(grid_frame, k,foreground=self.get_style_secondarytextcolor()))
-            labels[i].grid(row=i, column=0, sticky="w", padx=padding, pady=padding)
-            textvariables.append(tk.StringVar(grid_frame, v))
+            labels.append(
+                self.label(
+                    scrolling_frame.inner_frame,
+                    k,
+                    foreground=self.get_style_secondarytextcolor(),
+                )
+            )
+            labels[i].grid(
+                row=i, column=0, sticky="w", padx=self.padding, pady=self.padding
+            )
+            textvariables.append(tk.StringVar(scrolling_frame.inner_frame, v))
             textvariables[i].trace_add("write", enable_save)
-            entries.append(self.entry(grid_frame, textvariables[i], width=32))
-            entries[i].grid(row=i, column=1, sticky="ew", padx=padding, pady=padding)
+            entries.append(
+                self.entry(scrolling_frame.inner_frame, textvariables[i], width=32)
+            )
+            entries[i].grid(
+                row=i, column=1, sticky="ew", padx=self.padding, pady=self.padding
+            )
             i += 1
+
+        scrolling_frame.outer_frame.grid(
+            column=0,
+            columnspan=2,
+            row=1,
+            sticky="news",
+            padx=self.padding,
+            pady=self.padding,
+        )
 
         def reset():
             for j in range(len(textvariables)):
@@ -281,7 +354,9 @@ class Settings:
             state="normal",
             background=self.get_style_accentcolor(),
         )
-        reset_button.grid(column=0, row=2, sticky="e", padx=padding, pady=padding)
+        reset_button.grid(
+            column=0, row=2, sticky="e", padx=self.padding, pady=self.padding
+        )
 
         save_button = self.button(
             frame,
@@ -290,11 +365,65 @@ class Settings:
             state="disable",
             background=self.get_style_accentcolor(),
         )
-        save_button.grid(column=1, row=2, sticky="w", padx=padding, pady=padding)
+        save_button.grid(
+            column=1, row=2, sticky="w", padx=self.padding, pady=self.padding
+        )
 
     # endregion
 
     # region Widget Overrides
+
+    def scrolling_frame(
+        self,
+        root,
+        outer_background=None,
+        inner_background=None,
+        *args,
+        **kwargs,
+    ):
+
+        class ScrollingFrame:
+            def __init__(
+                self, outer_frame: self.frame, inner_frame: self.frame
+            ) -> None:
+                self.outer_frame = outer_frame
+                self.inner_frame = inner_frame
+
+        outer_frame = self.frame(
+            root,
+            background=outer_background,
+        )
+        outer_frame.rowconfigure(0, weight=0)
+        outer_frame.rowconfigure(1, weight=1)
+        outer_frame.columnconfigure(0, weight=1)
+        outer_frame.columnconfigure(1, weight=0)
+
+        # Create a canvas inside the frame
+        canvas = self.canvas(outer_frame)
+        canvas.grid(row=1, column=0, sticky="news")
+
+        # add a horizantal scrollbar to the frame
+        scrollbar = ttk.Scrollbar(outer_frame, orient="horizontal", command=canvas.xview)
+        scrollbar.grid(row=0, column=0, columnspan=2, sticky="ew")
+
+        # Add a vertical scrollbar to the frame
+        scrollbar = ttk.Scrollbar(outer_frame, orient="vertical", command=canvas.yview)
+        scrollbar.grid(row=1, column=1, sticky="ns")
+
+        # Configure canvas to work with scrollbar
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Add another frame inside the canvas for the actual content
+        inner_frame = self.frame(canvas, background=inner_background)
+        canvas.create_window((0, 0), window=inner_frame, anchor="nw")
+
+        # Ensure scrolling works
+        inner_frame.bind(
+            "<Configure>",
+            lambda event: canvas.configure(scrollregion=canvas.bbox("all")),
+        )
+
+        return ScrollingFrame(outer_frame, inner_frame)
 
     def frame(
         self,
@@ -386,7 +515,6 @@ class Settings:
         background=None,
         font=None,
         text="",
-        width=20,
         *args,
         **kwargs,
     ):
@@ -403,7 +531,6 @@ class Settings:
             foreground=foreground,
             background=background,
             font=font,
-            width=width,
             *args,
             **kwargs,
         )
@@ -413,6 +540,7 @@ class Settings:
         root,
         width,
         height,
+        textvariable,
         foreground=None,
         background=None,
         font=None,
@@ -429,6 +557,7 @@ class Settings:
             root,
             height=height,
             width=width,
+            textvariable=textvariable,
             foreground=foreground,
             background=background,
             font=font,
@@ -463,7 +592,7 @@ class Settings:
 
     def get_style_secondarytextcolor(self):
         return self.get_setting(Keys.SECONDARY_TEXT_COLOR)
-    
+
     def get_style_secondarycolor(self):
         return self.get_setting(Keys.SECONDARY_COLOR)
 
@@ -496,7 +625,15 @@ class Settings:
 
 # region Imparian Base App
 class ImparianApp(tk.Tk):
-    def __init__(self, title: str, settings:Settings=None, has_settings_edit=False):
+    def __init__(
+        self,
+        title: str,
+        settings: Settings = None,
+        has_settings_edit=False,
+        close_warnings: list[close_warning] = [],
+        minwidth=0,
+        minheight=0,
+    ):
         super().__init__()
         self.next_row = 0
         if settings == None:
@@ -505,10 +642,11 @@ class ImparianApp(tk.Tk):
         self.wm_attributes("-transparentcolor", settings.get_style_clearcolor())
         self.title("Imparea Comic Utilities")
         self.configure(background=settings.get_style_clearcolor())
-        self.minsize(600, 0)
+        self.minsize(minwidth, minheight)
         self.overrideredirect(1)
         self.attributes("-topmost", True)
         self.grid_columnconfigure(0, weight=1)
+        self.close_warnings = close_warnings
 
         # TODO: Add logic to ovveride the default fonts with the settings fonts.
         # self.defaultFont = font.nametofont("TkDefaultFont")
@@ -533,6 +671,9 @@ class ImparianApp(tk.Tk):
         self.geometry("+%s+%s" % (x, y))
 
     def exit(self):
+        for x in self.close_warnings:
+            if not x.fire_warning():
+                return
         self.destroy()
 
     def top_menu(self, frame, title, has_settings_edit):
@@ -570,7 +711,7 @@ class ImparianApp(tk.Tk):
         exit_button = tk.Button(
             frame,
             text="✕",
-            command=self.destroy,
+            command=self.exit,
             background=self.settings.get_style_primarytextcolor(),
             foreground=self.settings.get_style_primarycolor(),
             font=self.settings.get_style_headerfont(),
@@ -578,7 +719,7 @@ class ImparianApp(tk.Tk):
         exit_button.grid(row=0, column=2, sticky="e")
 
     def add_frame(
-        self, row=-1, column=0, sticky="new", background=None, *args, **kwargs
+        self, row=-1, column=0, sticky="news", background=None, *args, **kwargs
     ):
         if background is None:
             background = self.settings.get_style_primarycolor()
@@ -591,7 +732,7 @@ class ImparianApp(tk.Tk):
             *args,
             **kwargs,
         )
-        frame.grid(column=column, row=row, sticky=sticky)
+        frame.grid(row=row, column=column, sticky=sticky)
         return frame
 
 

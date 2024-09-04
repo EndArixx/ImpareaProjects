@@ -45,6 +45,10 @@ class EpisodeCollector:
             self.right = right
             self.bottom = bottom
 
+    def add_transforms(self):
+        #TODO: implement
+        print("Unmade")
+
     def delete_existing(self):
         for remove_path in self.remove_files:
             print("deleting:{}".format(remove_path.split("\\")[-1]))
