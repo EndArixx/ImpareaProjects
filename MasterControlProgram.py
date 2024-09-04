@@ -271,7 +271,7 @@ def execute_primary_function():
         f"{settings.get_program_name()} - {VERSION}",
         settings,
         True,
-        minwidth=700,
+        minwidth=975,
         close_warnings=[imp_factory]
     )
 

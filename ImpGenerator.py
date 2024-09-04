@@ -184,6 +184,7 @@ class ImpFactory(tools.close_warning):
         )
         if url:
             self.load_imps_from_file(url)
+            self.turn_on_warning()
             self.refreshgrid()
 
     def load_imps_from_primaryfile(self):
@@ -197,7 +198,7 @@ class ImpFactory(tools.close_warning):
             imp = Imp.create_imp_from_filestring(i)
             if imp is not None:
                 if imp.name in self.imps:
-                    #todo, add YesToAll and NoToAll
+                    # todo, add YesToAll and NoToAll
                     result = tk.messagebox.askyesno(
                         title=f"Override Imp?",
                         message=f"Do you want to override {imp.name}?\n {imp}",
@@ -275,7 +276,7 @@ class ImpFactory(tools.close_warning):
 
     # endregion
 
-    # region UI zones
+    # region imp Generator UI
 
     def load_vars_from_imp(self, imp: Imp):
         self.name_var.set(imp.name)
@@ -366,11 +367,15 @@ class ImpFactory(tools.close_warning):
         self.imp_grid_zone(self.grid_frame)
         self.grid_frame.grid_remove()
 
-        self.edit_frame = self.add_frame(frame, 3)
+        self.edit_frame = self.add_frame(frame, 2)
         self.imp_edit_zone(self.edit_frame)
         self.edit_frame.grid_remove()
 
         self.open_panel(tag)
+
+    # endregion
+
+    # region Imp Grid
 
     def refreshgrid(self):
         if len(self.grid_columns) > 0:
@@ -395,6 +400,7 @@ class ImpFactory(tools.close_warning):
             if result:
                 if self.imps.pop(target):
                     self.settings.print_debug(f"  Removed {target} from grid")
+                    self.turn_on_warning()
                     self.refreshgrid()
                 else:
                     self.settings.print_debug(
@@ -405,28 +411,37 @@ class ImpFactory(tools.close_warning):
             row = []
             row.append(
                 self.settings.label(
-                    self.imp_frame, imp.name, borderwidth=1, relief="solid"
+                    self.scrolling_frame.inner_frame,
+                    imp.name,
+                    borderwidth=1,
+                    relief="solid",
                 )
             )
             row[0].grid(row=i, column=0, sticky="news")
 
             row.append(
                 self.settings.label(
-                    self.imp_frame, imp.transform(), borderwidth=1, relief="solid"
+                    self.scrolling_frame.inner_frame,
+                    imp.transform(),
+                    borderwidth=1,
+                    relief="solid",
                 )
             )
             row[1].grid(row=i, column=1, sticky="news")
 
             row.append(
                 self.settings.label(
-                    self.imp_frame, imp.pronouns, borderwidth=1, relief="solid"
+                    self.scrolling_frame.inner_frame,
+                    imp.pronouns,
+                    borderwidth=1,
+                    relief="solid",
                 )
             )
             row[2].grid(row=i, column=2, sticky="news")
 
             row.append(
                 self.settings.label(
-                    self.imp_frame,
+                    self.scrolling_frame.inner_frame,
                     imp.glowcolor,
                     background=imp.glowcolor,
                     borderwidth=1,
@@ -437,7 +452,7 @@ class ImpFactory(tools.close_warning):
 
             row.append(
                 self.settings.label(
-                    self.imp_frame,
+                    self.scrolling_frame.inner_frame,
                     imp.skincolor,
                     background=imp.skincolor,
                     borderwidth=1,
@@ -448,7 +463,7 @@ class ImpFactory(tools.close_warning):
 
             row.append(
                 self.settings.label(
-                    self.imp_frame,
+                    self.scrolling_frame.inner_frame,
                     imp.dullcolor,
                     background=imp.dullcolor,
                     borderwidth=1,
@@ -459,7 +474,7 @@ class ImpFactory(tools.close_warning):
 
             row.append(
                 self.settings.button(
-                    self.imp_frame,
+                    self.scrolling_frame.inner_frame,
                     "✎",
                     command=lambda target=imp.name: edit(target),
                     foreground=self.settings.get_style_primarytextcolor(),
@@ -473,7 +488,7 @@ class ImpFactory(tools.close_warning):
 
             row.append(
                 self.settings.button(
-                    self.imp_frame,
+                    self.scrolling_frame.inner_frame,
                     "🗑",
                     command=lambda target=imp.name: delete(target),
                     foreground=self.settings.get_style_primarytextcolor(),
@@ -497,22 +512,17 @@ class ImpFactory(tools.close_warning):
 
         for i in range(zone_columns):
             frame.grid_columnconfigure(zone_columns, weight=1)
-        #TODO: make this actually work!
-        self.imp_frame = self.settings.scrollable_frame(
+
+        self.scrolling_frame = self.settings.scrolling_frame(
             frame,
-            data=self.imps,
-            height=100,
-            row=0,
-            column=0,
-            columnspan=zone_columns,
-            background=self.settings.get_style_inputcolor(),
+            inner_background=self.settings.get_style_inputcolor(),
         )
 
         for i in range(grid_columns):
-            self.imp_frame.grid_columnconfigure(i, weight=1)
+            self.scrolling_frame.inner_frame.grid_columnconfigure(i, weight=1)
 
         label_header_name = self.settings.label(
-            self.imp_frame,
+            self.scrolling_frame.inner_frame,
             "Name",
             font=self.settings.get_style_headerfont(),
             background=secondary_color,
@@ -524,7 +534,7 @@ class ImpFactory(tools.close_warning):
         label_header_name.grid(row=0, column=0, sticky="ew")
 
         label_header_transform = self.settings.label(
-            self.imp_frame,
+            self.scrolling_frame.inner_frame,
             "Transform",
             font=self.settings.get_style_headerfont(),
             background=secondary_color,
@@ -536,7 +546,7 @@ class ImpFactory(tools.close_warning):
         label_header_transform.grid(row=0, column=1, sticky="ew")
 
         label_header_pronoun = self.settings.label(
-            self.imp_frame,
+            self.scrolling_frame.inner_frame,
             "Pronouns",
             font=self.settings.get_style_headerfont(),
             background=secondary_color,
@@ -548,7 +558,7 @@ class ImpFactory(tools.close_warning):
         label_header_pronoun.grid(row=0, column=2, sticky="ew")
 
         label_header_glowcolor = self.settings.label(
-            self.imp_frame,
+            self.scrolling_frame.inner_frame,
             "Glow Color",
             font=self.settings.get_style_headerfont(),
             background=secondary_color,
@@ -560,7 +570,7 @@ class ImpFactory(tools.close_warning):
         label_header_glowcolor.grid(row=0, column=3, sticky="ew")
 
         label_header_skincolor = self.settings.label(
-            self.imp_frame,
+            self.scrolling_frame.inner_frame,
             "Skin Color",
             font=self.settings.get_style_headerfont(),
             background=secondary_color,
@@ -572,7 +582,7 @@ class ImpFactory(tools.close_warning):
         label_header_skincolor.grid(row=0, column=4, sticky="ew")
 
         label_header_dullcolor = self.settings.label(
-            self.imp_frame,
+            self.scrolling_frame.inner_frame,
             "Dull Color",
             font=self.settings.get_style_headerfont(),
             background=secondary_color,
@@ -584,7 +594,7 @@ class ImpFactory(tools.close_warning):
         label_header_dullcolor.grid(row=0, column=5, sticky="ew")
 
         label_header_functions = self.settings.label(
-            self.imp_frame,
+            self.scrolling_frame.inner_frame,
             "",
             font=self.settings.get_style_headerfont(),
             background=secondary_color,
@@ -595,11 +605,12 @@ class ImpFactory(tools.close_warning):
         label_header_functions.grid(row=0, column=6, columnspan=2, sticky="ew")
 
         self.refreshgrid()
-        self.imp_frame.grid(
-            row=0,
+    
+        self.scrolling_frame.outer_frame.grid(
             column=0,
-            columnspan=zone_columns,
-            sticky="ew",
+            columnspan=grid_columns,
+            row=0,
+            sticky="news",
             padx=self.padding,
             pady=self.padding,
         )
@@ -648,6 +659,10 @@ class ImpFactory(tools.close_warning):
             padx=self.padding,
             pady=self.padding,
         )
+
+    # endregion
+
+    # region Imp Edit Zone
 
     def imp_edit_zone(self, frame):
         self.name_var = tk.StringVar(frame, self.edit_imp.name)
@@ -987,21 +1002,31 @@ class ImpFactory(tools.close_warning):
         )
         i += 1
 
+    # endregion
+
+    #region UI
+
     def run_imp_gen_IU(self):
 
         app = tools.ImparianApp(
-            "Imp Generator", self.settings, minwidth=700, close_warnings=[self]
+            "Imp Generator",
+            self.settings,
+            close_warnings=[self],
         )
         app.title("Imp Generator")
 
-        frame = app.add_frame(row=1)
+        frame = app.add_frame()
+
+        app.geometry("975x600")
+
         self.imp_management_zone(frame, tag=Tags.grid_tag)
 
         frame.mainloop()
 
-    # endregion
 
 
 if __name__ == "__main__":
     gen = ImpFactory()
     gen.run_imp_gen_IU()
+    
+    # endregion

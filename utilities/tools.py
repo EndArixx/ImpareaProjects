@@ -9,6 +9,7 @@ from pathlib import Path
 
 # region File Ops
 
+
 def open_file(str):
     return open(str, "r").read().split("\n")
 
@@ -71,11 +72,13 @@ class Color:
         r = lambda: random.randint(0, 255)
         return Color("#%02X%02X%02X" % (r(), r(), r()))
 
+
 class close_warning(ABC):
     @abstractmethod
     def fire_warning(self) -> bool:
         """Runs the nessisary checks then return continue check."""
         pass
+
 
 class Keys:
     COMIC_FOLDER = "COMIC_FOLDER"
@@ -247,7 +250,12 @@ class Settings(close_warning):
         return True
 
     def open_settings(self):
-        root = ImparianApp("Settings", self, minwidth=600, close_warnings=[self])
+        root = ImparianApp(
+            "Settings",
+            self,
+            minwidth=600,
+            close_warnings=[self],
+        )
 
         grid = root.add_frame()
 
@@ -299,7 +307,7 @@ class Settings(close_warning):
         frame.grid_columnconfigure(0, weight=1)
         frame.grid_columnconfigure(1, weight=1)
 
-        grid_frame = self.scrollable_frame(frame,self.data,0,0,2)
+        scrolling_frame = self.scrolling_frame(frame)
 
         i = 0
         for k, v in self.data.items():
@@ -308,15 +316,32 @@ class Settings(close_warning):
             #   [] File/folder location/name
             labels.append(
                 self.label(
-                    grid_frame, k, foreground=self.get_style_secondarytextcolor()
+                    scrolling_frame.inner_frame,
+                    k,
+                    foreground=self.get_style_secondarytextcolor(),
                 )
             )
-            labels[i].grid(row=i, column=0, sticky="w", padx=self.padding, pady=self.padding)
-            textvariables.append(tk.StringVar(grid_frame, v))
+            labels[i].grid(
+                row=i, column=0, sticky="w", padx=self.padding, pady=self.padding
+            )
+            textvariables.append(tk.StringVar(scrolling_frame.inner_frame, v))
             textvariables[i].trace_add("write", enable_save)
-            entries.append(self.entry(grid_frame, textvariables[i], width=32))
-            entries[i].grid(row=i, column=1, sticky="ew", padx=self.padding, pady=self.padding)
+            entries.append(
+                self.entry(scrolling_frame.inner_frame, textvariables[i], width=32)
+            )
+            entries[i].grid(
+                row=i, column=1, sticky="ew", padx=self.padding, pady=self.padding
+            )
             i += 1
+
+        scrolling_frame.outer_frame.grid(
+            column=0,
+            columnspan=2,
+            row=1,
+            sticky="news",
+            padx=self.padding,
+            pady=self.padding,
+        )
 
         def reset():
             for j in range(len(textvariables)):
@@ -329,7 +354,9 @@ class Settings(close_warning):
             state="normal",
             background=self.get_style_accentcolor(),
         )
-        reset_button.grid(column=0, row=2, sticky="e", padx=self.padding, pady=self.padding)
+        reset_button.grid(
+            column=0, row=2, sticky="e", padx=self.padding, pady=self.padding
+        )
 
         save_button = self.button(
             frame,
@@ -338,52 +365,65 @@ class Settings(close_warning):
             state="disable",
             background=self.get_style_accentcolor(),
         )
-        save_button.grid(column=1, row=2, sticky="w", padx=self.padding, pady=self.padding)
+        save_button.grid(
+            column=1, row=2, sticky="w", padx=self.padding, pady=self.padding
+        )
 
     # endregion
 
     # region Widget Overrides
 
-    def scrollable_frame(self,
+    def scrolling_frame(
+        self,
         root,
-        data,
-        row,
-        column,
-        columnspan=1,
-        background=None,
+        outer_background=None,
+        inner_background=None,
         *args,
         **kwargs,
     ):
-        
-        grid_dummy = self.label(root, "")
-        grid_dummy.grid(row=0, column=0)
-        grid_dummy.update()
 
-        frame_canvas = self.frame(root)
-        frame_canvas.grid(
-            row=row, column=column, columnspan=columnspan, sticky="news", padx=self.padding, pady=self.padding
-        )
-        frame_canvas.grid_rowconfigure(0, weight=1)
-        frame_canvas.grid_columnconfigure(0, weight=1)
-        canvas = self.canvas(frame_canvas, background=self.get_style_secondarycolor())
-        canvas.grid(row=row, column=column, columnspan=columnspan, sticky="news")
-        # TODO: Theme Scrollbar
-        vsb = ttk.Scrollbar(frame_canvas, orient="vertical", command=canvas.yview)
-        vsb.grid(row=0, column=2, sticky="ns")
-        canvas.configure(yscrollcommand=vsb.set)
-        grid_frame = self.frame(canvas,background)
-        canvas.create_window((0, 0), window=grid_frame, anchor="nw")
-        grid_height = len(data.items()) * (
-            grid_dummy.winfo_height() + (int(self.padding) * 2)
-        )
-        grid_frame.config(height=grid_height)
-        canvas.config(scrollregion=canvas.bbox("all"))
-        grid_frame.grid_columnconfigure(0, weight=0)
-        grid_frame.grid_columnconfigure(1, weight=1)
-        grid_dummy.grid_remove()
+        class ScrollingFrame:
+            def __init__(
+                self, outer_frame: self.frame, inner_frame: self.frame
+            ) -> None:
+                self.outer_frame = outer_frame
+                self.inner_frame = inner_frame
 
-        return grid_frame
-        
+        outer_frame = self.frame(
+            root,
+            background=outer_background,
+        )
+        outer_frame.rowconfigure(0, weight=0)
+        outer_frame.rowconfigure(1, weight=1)
+        outer_frame.columnconfigure(0, weight=1)
+        outer_frame.columnconfigure(1, weight=0)
+
+        # Create a canvas inside the frame
+        canvas = self.canvas(outer_frame)
+        canvas.grid(row=1, column=0, sticky="news")
+
+        # add a horizantal scrollbar to the frame
+        scrollbar = ttk.Scrollbar(outer_frame, orient="horizontal", command=canvas.xview)
+        scrollbar.grid(row=0, column=0, columnspan=2, sticky="ew")
+
+        # Add a vertical scrollbar to the frame
+        scrollbar = ttk.Scrollbar(outer_frame, orient="vertical", command=canvas.yview)
+        scrollbar.grid(row=1, column=1, sticky="ns")
+
+        # Configure canvas to work with scrollbar
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Add another frame inside the canvas for the actual content
+        inner_frame = self.frame(canvas, background=inner_background)
+        canvas.create_window((0, 0), window=inner_frame, anchor="nw")
+
+        # Ensure scrolling works
+        inner_frame.bind(
+            "<Configure>",
+            lambda event: canvas.configure(scrollregion=canvas.bbox("all")),
+        )
+
+        return ScrollingFrame(outer_frame, inner_frame)
 
     def frame(
         self,
@@ -582,6 +622,7 @@ class Settings(close_warning):
 
     # endregion
 
+
 # region Imparian Base App
 class ImparianApp(tk.Tk):
     def __init__(
@@ -589,7 +630,7 @@ class ImparianApp(tk.Tk):
         title: str,
         settings: Settings = None,
         has_settings_edit=False,
-        close_warnings:list[close_warning]=[],
+        close_warnings: list[close_warning] = [],
         minwidth=0,
         minheight=0,
     ):
