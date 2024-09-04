@@ -7,7 +7,7 @@ from GenerateNewPage import *
 from ImpGenerator import *
 
 
-VERSION = "v0.2.5"
+VERSION = "v0.2.6"
 settings = tools.Settings()
 imp_factory = ImpFactory(settings)
 
