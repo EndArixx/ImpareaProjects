@@ -1,5 +1,7 @@
+from io import BytesIO
 import sys
 import tkinter as tk
+from tkinter.filedialog import askdirectory
 import PyInstaller.__main__
 import threading
 from CollectEpisodes import *
@@ -205,11 +207,13 @@ def file_zone(frame):
         warning_label.grid()
         open_comic_button["state"] = "disable"
         create_exe_button["state"] = "disable"
+        compile_pdf_button["state"] = "disable"
 
     def enable_all():
         warning_label.grid_remove()
         open_comic_button["state"] = "normal"
         create_exe_button["state"] = "normal"
+        compile_pdf_button["state"] = "normal"
 
     def open_comic_folder():
         print(settings.get_comic_dir())
@@ -233,6 +237,59 @@ def file_zone(frame):
         thread = threading.Thread(target=run_thread, args=())
         thread.start()
 
+    def compile_to_pdf(source, destination):
+        print(f"Compiling {source} into {destination}")
+        if(not source or not destination):
+            enable_all()
+            return
+        
+        def run_thread(dest):
+            imgs = []
+            if os.path.splitext(dest)[1] != ".pdf":
+                    dest = dest + ".pdf"
+
+            valid_images = [".jpg",".gif",".png",".tga", ".jpeg", ".bmp"]
+            for f in os.listdir(source):
+                ext = os.path.splitext(f)[1]
+                if ext.lower() not in valid_images:
+                    continue
+                img = Image.open(os.path.join(source, f)).convert("RGB")
+                with BytesIO() as f:
+                    img.save(f, format='JPEG')
+                    f.seek(0)
+                    ima_jpg = Image.open(f)
+                    ima_jpg.load()
+
+                imgs.append(ima_jpg)
+
+
+            imgs[0].save(dest, "PDF" ,resolution=100.0, save_all=True, append_images=imgs[1:])
+            enable_all()
+            print(f"{dest} created Successfully.")
+            os.startfile(dest)
+            
+        disable_all()
+        thread = threading.Thread(target=lambda: run_thread(destination))
+        thread.start()
+    
+    png_folder = f"{settings.get_comic_dir()}\\PNGs\\"
+    pdf_folder = f"{settings.get_comic_dir()}\\PDFs\\"
+
+    def compile_comic_to_pdf():
+        disable_all()
+        source = png_folder
+        dest = f"{pdf_folder}{settings.get_comic_name()}.pdf"
+        compile_to_pdf(source, dest)
+
+    def compile_folder_to_pdf():
+        disable_all()
+        source = askdirectory(title="Select Source Folder",initialdir=png_folder)
+        if not source:
+            enable_all()
+            return
+        destination = asksaveasfilename(title="PDF Name",initialdir=pdf_folder, filetypes=[("PDF files", f"*.pdf")])
+        compile_to_pdf(source, destination)     
+
     zone_label = get_zone_header(frame, title="File Operations")
     zone_label.grid(row=0, column=0, columnspan=4, padx=PADDING, pady=PADDING, sticky="we")
 
@@ -252,10 +309,26 @@ def file_zone(frame):
             width=1,
         )
         create_exe_button.grid(row=1, column=1, sticky="ew", padx=PADDING, pady=PADDING)
+    
+    compile_comic_button = settings.button(
+        frame,
+        text=f"Create: {settings.get_comic_name()}.pdf",
+        command=compile_comic_to_pdf,
+        width=1
+    )
+    compile_comic_button.grid(row=1, column=2, sticky="ew", padx=PADDING, pady=PADDING) 
+    
+    compile_pdf_button = settings.button(
+        frame,
+        text="Create .pdf from Folder",
+        command=compile_folder_to_pdf,
+        width=1,
+    )
+    compile_pdf_button.grid(row=1, column=3, sticky="ew", padx=PADDING, pady=PADDING) 
 
     warning_label = settings.label(
         frame,
-        text="Creating Executable",
+        text="⌛ In Progress ⏳",
         foreground=WARNING_TEXT_COLOR,
         background=WARNING_COLOR,
         font=HEADER_FONT,

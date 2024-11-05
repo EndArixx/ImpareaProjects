@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
+from io import BytesIO
 import random
 import sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askdirectory, askopenfilename
-from tkinter import messagebox
 from pathlib import Path
+from PIL import Image
 
 # region File Ops
 
@@ -81,6 +82,7 @@ class close_warning(ABC):
 
 
 class Keys:
+    COMIC_NAME = "COMIC_NAME"
     COMIC_FOLDER = "COMIC_FOLDER"
     DEBUG_MODE = "DEBUG_MODE"
     IMAGE_EXTENSION = "IMAGE_EXTENSION"
@@ -161,10 +163,15 @@ class Settings(close_warning):
         # Prompt for missing or failing Settings
 
         if Keys.DEBUG_MODE not in self.data:
-            response = messagebox.askquestion(
+            response = tk.messagebox.askquestion(
                 "DebugMode", "Would you like to turn on 'Debug Mode'?"
             )
             self.set_setting(Keys.DEBUG_MODE, response)
+
+        if (Keys.COMIC_NAME not in self.data):
+            name = tk.simpledialog.askstring("Comic Name", "Enter name of Comic:")
+            if len(name) > 0:
+                self.set_setting(Keys.COMIC_NAME, name)
 
         if (
             Keys.COMIC_FOLDER not in self.data
@@ -568,6 +575,8 @@ class Settings(close_warning):
     # endregion
 
     # region Specific gets
+    def get_comic_name(self):
+        return self.get_setting(Keys.COMIC_NAME)
 
     def get_comic_dir(self):
         return self.get_setting(Keys.COMIC_FOLDER)
