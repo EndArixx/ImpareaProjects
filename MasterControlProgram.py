@@ -202,18 +202,19 @@ def file_zone(frame):
     frame.grid_rowconfigure(0, weight=0)
     for i in range(4):
         frame.grid_columnconfigure(index=i, weight=1)
+    hasExeButt = not getattr(sys, "frozen", False) and settings.in_debug_Mode
 
     def disable_all():
         warning_label.grid()
         open_comic_button["state"] = "disable"
-        create_exe_button["state"] = "disable"
         compile_pdf_button["state"] = "disable"
+        if hasExeButt: create_exe_button["state"] = "disable"
 
     def enable_all():
         warning_label.grid_remove()
         open_comic_button["state"] = "normal"
-        create_exe_button["state"] = "normal"
         compile_pdf_button["state"] = "normal"
+        if hasExeButt: create_exe_button["state"] = "normal"
 
     def open_comic_folder():
         print(settings.get_comic_dir())
@@ -301,7 +302,7 @@ def file_zone(frame):
     )
     open_comic_button.grid(row=1, column=0, sticky="ew", padx=PADDING, pady=PADDING)
 
-    if not getattr(sys, "frozen", False) and settings.in_debug_Mode:
+    if hasExeButt:
         create_exe_button = settings.button(
             frame,
             text="Create Executable",
