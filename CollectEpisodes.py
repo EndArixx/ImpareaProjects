@@ -4,10 +4,16 @@ from glob import glob
 from PIL import Image
 from optparse import OptionParser
 import utilities.tools as tools
+'''
+Todo:
+[] Make a smarter file gatherer
+[] add 2 by 2 page layouts
+'''
 
 MODE_SLICE = "s"
 MODE_TRANSFORM = "t"
 MODE_SQUARE = "q"
+UNCENSOREDMARKER = "(U)"
 
 
 class EpisodeCollector:
@@ -20,7 +26,7 @@ class EpisodeCollector:
         self.slice_half_folder_name = "Slice-Half"
         self.slice_Quarter_folder_name = "Slice-Quarter"
         self.transform_folder_name = "Transforms"
-        self.uncensored_folder_name = "(U)"
+        self.uncensored_folder_name = UNCENSOREDMARKER
         self.square_half_folder_name = "Square-Half"
         self.square_Quarter_folder_name = "Square-Quarter"
         self.comic_dir = self.settings.get_comic_dir()
@@ -96,7 +102,8 @@ class EpisodeCollector:
 
     # copy over files
     def copy_stuff(self, files):
-        self.if_not_exist_make_folder(self.uncensored_folder_name)
+        print("Copying Files")
+        goodfiles = []
         for image_path in files:
             image_path_split = image_path.split("\\")
             image_dir = image_path_split[-2]
@@ -106,13 +113,36 @@ class EpisodeCollector:
             if "{}{}".format(image_dir, self.image_file_type) == image_name:
                 print("copying:{}".format(image_name))
                 image_destination = os.path.join(self.png_dir, image_name)
+                goodfiles += [image_path]
             elif "{}(U){}".format(image_dir, self.image_file_type) == image_name:
-                print("copying:{} (Uncensored)".format(image_name))
-                image_destination = os.path.join(
-                    self.png_dir, self.uncensored_folder_name, image_name
-                )
+                goodfiles += [image_path]
             if image_destination != "ERROR":
                 shutil.copy(image_path, image_destination)
+        self.copy_uncensored(goodfiles)
+
+    # copy over uncensored files
+    def copy_uncensored(self, allfiles):
+        print("Copying Uncensored Files")
+        self.if_not_exist_make_folder(self.uncensored_folder_name)
+        unsen = list(filter(lambda x: UNCENSOREDMARKER in x , allfiles))
+        files = list(filter(lambda x: UNCENSOREDMARKER not in x, allfiles))
+        for u in unsen:
+            i = files.index(u.replace(UNCENSOREDMARKER, ""))
+            files[i] = u        
+
+        for image_path in files:
+            image_path_split = image_path.split("\\")
+            image_name = image_path_split[-1]
+            image_destination = "ERROR"
+            self.trim_headers(image_path)
+            print("copying:{} (Uncensored)".format(image_name))
+            image_destination = os.path.join(
+                self.png_dir, self.uncensored_folder_name, image_name
+            )
+            if image_destination != "ERROR":
+                shutil.copy(image_path, image_destination)
+
+    
 
     def slice_transform(self, files, folder):
         print("Slicing Transforms")
