@@ -1,12 +1,10 @@
 from abc import ABC, abstractmethod
-from io import BytesIO
 import random
 import sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter.filedialog import askdirectory, askopenfilename
 from pathlib import Path
-from PIL import Image
 
 # region File Ops
 
@@ -101,6 +99,7 @@ class Keys:
     HEADER_FONT = "HEADER_FONT"
     TEXT_FONT = "TEXT_FONT"
     PADDING = "PADDING"
+    ALWAYS_ON_TOP = "ALWAYS_ON_TOP"
 
 
 class Settings(close_warning):
@@ -137,6 +136,7 @@ class Settings(close_warning):
         self.print_debug(f"Adding: {key} : {value}")
         self.save_settings()
 
+    # TODO: figure out why this isnt clearing and allowing close without warning. 
     def save_settings(self):
         with open(self.settingsFile, "w") as f:
             for k, v in self.data.items():
@@ -167,6 +167,12 @@ class Settings(close_warning):
                 "DebugMode", "Would you like to turn on 'Debug Mode'?"
             )
             self.set_setting(Keys.DEBUG_MODE, response)
+
+        if Keys.ALWAYS_ON_TOP not in self.data:
+            response = tk.messagebox.askquestion(
+                "Always on top", "Would like this app to appear remain permanantly ontop of other apps?"
+            )
+            self.set_setting(Keys.ALWAYS_ON_TOP, response)
 
         if (Keys.COMIC_NAME not in self.data):
             name = tk.simpledialog.askstring("Comic Name", "Enter name of Comic:")
@@ -391,7 +397,7 @@ class Settings(close_warning):
 
         class ScrollingFrame:
             def __init__(
-                self, outer_frame: self.frame, inner_frame: self.frame
+                self, outer_frame, inner_frame
             ) -> None:
                 self.outer_frame = outer_frame
                 self.inner_frame = inner_frame
@@ -628,6 +634,7 @@ class Settings(close_warning):
 
     def get_style_padding(self):
         return self.get_setting(Keys.PADDING)
+    
 
     # endregion
 
@@ -652,8 +659,9 @@ class ImparianApp(tk.Tk):
         self.title("Imparea Comic Utilities")
         self.configure(background=settings.get_style_clearcolor())
         self.minsize(minwidth, minheight)
-        self.overrideredirect(1)
-        self.attributes("-topmost", True)
+        if settings.get_setting_is_on(Keys.ALWAYS_ON_TOP):
+            self.overrideredirect(1)
+            self.attributes("-topmost", True)
         self.grid_columnconfigure(0, weight=1)
         self.close_warnings = close_warnings
 

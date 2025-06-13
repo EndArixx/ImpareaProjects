@@ -4,7 +4,6 @@ import string
 import tkinter as tk
 from tkinter import colorchooser
 from tkinter.filedialog import askopenfilename, asksaveasfilename
-from typing import Dict, List
 import utilities.tools as tools
 
 
