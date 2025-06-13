@@ -724,16 +724,16 @@ class ImparianApp(tk.Tk):
                 font=self.settings.get_style_headerfont(),
             )
             setting_button.grid(row=0, column=1, sticky="e")
-
-        exit_button = tk.Button(
-            frame,
-            text="✕",
-            command=self.exit,
-            background=self.settings.get_style_primarytextcolor(),
-            foreground=self.settings.get_style_primarycolor(),
-            font=self.settings.get_style_headerfont(),
-        )
-        exit_button.grid(row=0, column=2, sticky="e")
+        if self.settings.get_setting_is_on(Keys.ALWAYS_ON_TOP):
+            exit_button = tk.Button(
+                frame,
+                text="✕",
+                command=self.exit,
+                background=self.settings.get_style_primarytextcolor(),
+                foreground=self.settings.get_style_primarycolor(),
+                font=self.settings.get_style_headerfont(),
+            )
+            exit_button.grid(row=0, column=2, sticky="e")
 
     def add_frame(
         self, row=-1, column=0, sticky="news", background=None, *args, **kwargs
