@@ -8,6 +8,10 @@ from CollectEpisodes import *
 from GenerateNewPage import *
 from ImpGenerator import *
 
+'''
+------------TODO:---------------
+1) create exe/launch w/o console if not in debuggging.
+'''
 
 VERSION = "v0.2.6"
 settings = tools.Settings()
