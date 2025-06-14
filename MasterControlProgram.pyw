@@ -10,7 +10,8 @@ from ImpGenerator import *
 
 '''
 ------------TODO:---------------
-1) create exe/launch w/o console if not in debuggging.
+[x] Create exe/launch w/o console if not in debuggging.
+[]  Add stdout/stderr to console.
 '''
 
 VERSION = "v0.2.6"
@@ -228,7 +229,7 @@ def file_zone(frame):
         def run_thread():
             PyInstaller.__main__.run(
                 [
-                    "MasterControlProgram.py",
+                    "MasterControlProgram.pyw",
                     "--onefile",
                     "--icon=data/mcp.ico",
                     f"--name={PROGRAM_NAME}",
@@ -348,9 +349,10 @@ def execute_primary_function():
     root = tools.ImparianApp(
         f"{settings.get_program_name()} - {VERSION}",
         settings,
-        True,
+        has_settings_edit=True,
+        has_debug_log=True,
+        close_warnings=[imp_factory],
         minwidth=975,
-        close_warnings=[imp_factory]
     )
 
     # Generate New Page

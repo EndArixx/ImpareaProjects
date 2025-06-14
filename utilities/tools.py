@@ -104,6 +104,8 @@ class Keys:
 
 class Settings(close_warning):
     def __init__(self):
+        self.debug_log = ""
+        self.text_debug_log_display = None
         self.settingLocation = Path.home() / "AppData/Roaming/ImpProjects"
         self.settingsFile = self.settingLocation / "settings"
         self.data = {}
@@ -115,6 +117,9 @@ class Settings(close_warning):
     def print_debug(self, str):
         if self.get_setting_is_on(Keys.DEBUG_MODE):
             print(f"{str}")
+            self.debug_log = f"{self.debug_log}{str}\n"
+            if self.text_debug_log_display is not None:
+                self.text_debug_log_display.insert(tk.END, f"{str}\n")
 
     # region Settings controls
 
@@ -245,7 +250,7 @@ class Settings(close_warning):
         if Keys.PADDING not in self.data:
             self.set_setting(Keys.PADDING, "5")
 
-        self.print_debug(f"Loaded: {self.settingsFile}\nSettings: {str(self.data)}")
+        self.print_debug(f"Loaded: {self.settingsFile}\nSettings: {str(self.data).replace(",", "\n")}")
 
     # endregion
 
@@ -260,6 +265,47 @@ class Settings(close_warning):
             if not result:
                 return False
         return True
+    
+    def open_log(self):
+        root = ImparianApp(
+            "Debug Log",
+            self,
+            minwidth=600,
+        )
+        
+        frame = root.add_frame()
+
+        self.log_grid(frame)
+
+        root.mainloop()
+
+    def log_grid(self, frame):
+        frame.grid_columnconfigure(0, weight=1)
+        frame.grid_rowconfigure(0, weight=1)
+        scrolling_frame = self.scrolling_frame(frame)
+        
+        self.text_debug_log_display = self.text(
+            scrolling_frame.inner_frame,
+            width=600,
+            height=300,
+            foreground=self.get_style_inputcolor(),
+            background=self.get_style_secondarytextcolor(),
+            font=self.get_style_textfont(),
+        )
+        
+        self.text_debug_log_display.grid(
+            row=0,
+            column=0,
+            sticky="news",
+        )
+
+        self.text_debug_log_display.insert(tk.END, self.debug_log)
+
+        scrolling_frame.outer_frame.grid(
+            column=0,
+            row=0,
+            sticky="news",
+        )
 
     def open_settings(self):
         root = ImparianApp(
@@ -553,7 +599,6 @@ class Settings(close_warning):
         root,
         width,
         height,
-        textvariable,
         foreground=None,
         background=None,
         font=None,
@@ -570,7 +615,6 @@ class Settings(close_warning):
             root,
             height=height,
             width=width,
-            textvariable=textvariable,
             foreground=foreground,
             background=background,
             font=font,
@@ -645,7 +689,8 @@ class ImparianApp(tk.Tk):
         self,
         title: str,
         settings: Settings = None,
-        has_settings_edit=False,
+        has_settings_edit = False,
+        has_debug_log = False,
         close_warnings: list[close_warning] = [],
         minwidth=0,
         minheight=0,
@@ -672,7 +717,7 @@ class ImparianApp(tk.Tk):
         #                            weight=font.BOLD)
 
         m_frame = self.add_frame(background=settings.get_style_primarytextcolor())
-        self.top_menu(m_frame, title, has_settings_edit)
+        self.top_menu(m_frame, title, has_settings_edit, has_debug_log)
 
     def startMove(self, event):
         self.x = event.x
@@ -693,7 +738,7 @@ class ImparianApp(tk.Tk):
                 return
         self.destroy()
 
-    def top_menu(self, frame, title, has_settings_edit):
+    def top_menu(self, frame, title, has_settings_edit, has_debug_log):
         frame.bind("<Button-1>", self.startMove)
         frame.bind("<ButtonRelease-1>", self.stopMove)
         frame.bind("<B1-Motion>", self.moving)
@@ -713,6 +758,19 @@ class ImparianApp(tk.Tk):
         label.bind("<ButtonRelease-1>", self.stopMove)
         label.bind("<B1-Motion>", self.moving)
         label.grid(column=0, row=0, columnspan=2, sticky="ew")
+
+        if has_debug_log and self.settings.get_setting_is_on(Keys.DEBUG_MODE):
+            # TODO: Only allow 1 open at a time.
+            log_button = tk.Button(
+                frame,
+                text="▤",
+                command=self.settings.open_log,
+                background=self.settings.get_style_primarytextcolor(),
+                foreground=self.settings.get_style_primarycolor(),
+                font=self.settings.get_style_headerfont(),
+            )
+            log_button.grid(row=0, column=1, sticky="e")
+
         if has_settings_edit:
             # TODO: Fix bug that is causing scrollbar to not be formatted when this is use.
             setting_button = tk.Button(
@@ -723,7 +781,7 @@ class ImparianApp(tk.Tk):
                 foreground=self.settings.get_style_primarycolor(),
                 font=self.settings.get_style_headerfont(),
             )
-            setting_button.grid(row=0, column=1, sticky="e")
+            setting_button.grid(row=0, column=2, sticky="e")
         if self.settings.get_setting_is_on(Keys.ALWAYS_ON_TOP):
             exit_button = tk.Button(
                 frame,
@@ -733,7 +791,7 @@ class ImparianApp(tk.Tk):
                 foreground=self.settings.get_style_primarycolor(),
                 font=self.settings.get_style_headerfont(),
             )
-            exit_button.grid(row=0, column=2, sticky="e")
+            exit_button.grid(row=0, column=3, sticky="e")
 
     def add_frame(
         self, row=-1, column=0, sticky="news", background=None, *args, **kwargs

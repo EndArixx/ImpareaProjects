@@ -1010,6 +1010,7 @@ class ImpFactory(tools.close_warning):
         app = tools.ImparianApp(
             "Imp Generator",
             self.settings,
+            has_debug_log=True,
             close_warnings=[self],
         )
         app.title("Imp Generator")
