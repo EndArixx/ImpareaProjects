@@ -136,7 +136,6 @@ class Settings(close_warning):
         self.print_debug(f"Adding: {key} : {value}")
         self.save_settings()
 
-    # TODO: figure out why this isnt clearing and allowing close without warning. 
     def save_settings(self):
         with open(self.settingsFile, "w") as f:
             for k, v in self.data.items():
@@ -315,7 +314,8 @@ class Settings(close_warning):
                     if v != self.data[k]:
                         self.data[k] = v
                 self.save_settings()
-                validate_data()
+                enable_save()
+                
 
         frame.grid_columnconfigure(0, weight=1)
         frame.grid_columnconfigure(1, weight=1)
