@@ -1,3 +1,4 @@
 #pip install -r utilities\requirements.txt  
 PyInstaller
 Pillow
+opencv-python

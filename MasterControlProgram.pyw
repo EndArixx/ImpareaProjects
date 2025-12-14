@@ -1,12 +1,11 @@
-from io import BytesIO
 import sys
 import tkinter as tk
 from tkinter.filedialog import askdirectory
-import PyInstaller.__main__
 import threading
 from CollectEpisodes import *
 from GenerateNewPage import *
 from ImpGenerator import *
+from CompileCentral import *
 
 '''
 ------------TODO:---------------
@@ -221,80 +220,40 @@ def file_zone(frame):
         compile_pdf_button["state"] = "normal"
         if hasExeButt: create_exe_button["state"] = "normal"
 
+    compile_central = CompileCentral(disable_all, enable_all, settings)
+
     def open_comic_folder():
         print(settings.get_comic_dir())
         os.startfile(settings.get_comic_dir())
 
-    def create_exe():
-        def run_thread():
-            PyInstaller.__main__.run(
-                [
-                    "MasterControlProgram.pyw",
-                    "--onefile",
-                    "--icon=data/mcp.ico",
-                    f"--name={PROGRAM_NAME}",
-                    "--add-data=data/:data",
-                ]
-            )
-            tk.messagebox.showinfo(title="Complete", message="Executable Created")
-            enable_all()
-
-        disable_all()
-        thread = threading.Thread(target=run_thread, args=())
-        thread.start()
-
-    def compile_to_pdf(source, destination):
-        print(f"Compiling {source} into {destination}")
-        if(not source or not destination):
-            enable_all()
-            return
-        
-        def run_thread(dest):
-            imgs = []
-            if os.path.splitext(dest)[1] != ".pdf":
-                    dest = dest + ".pdf"
-
-            valid_images = [".jpg",".gif",".png",".tga", ".jpeg", ".bmp"]
-            for f in os.listdir(source):
-                ext = os.path.splitext(f)[1]
-                if ext.lower() not in valid_images:
-                    continue
-                img = Image.open(os.path.join(source, f)).convert("RGB")
-                with BytesIO() as f:
-                    img.save(f, format='JPEG')
-                    f.seek(0)
-                    ima_jpg = Image.open(f)
-                    ima_jpg.load()
-
-                imgs.append(ima_jpg)
-
-
-            imgs[0].save(dest, "PDF" ,resolution=100.0, save_all=True, append_images=imgs[1:])
-            enable_all()
-            print(f"{dest} created Successfully.")
-            os.startfile(dest)
-            
-        disable_all()
-        thread = threading.Thread(target=lambda: run_thread(destination))
-        thread.start()
-    
     png_folder = f"{settings.get_comic_dir()}\\PNGs\\"
     pdf_folder = f"{settings.get_comic_dir()}\\PDFs\\"
 
     def compile_comic_to_pdf():
-        disable_all()
         source = png_folder
         dest = f"{pdf_folder}{settings.get_comic_name()}.pdf"
-        compile_to_pdf(source, dest)
+        compile_central.compile_to_pdf(source, dest)
 
     def compile_folder_to_pdf():
-        disable_all()
         source = askdirectory(title="Select Source Folder",initialdir=png_folder)
         if not source:
-            enable_all()
             return
         destination = asksaveasfilename(title="PDF Name",initialdir=pdf_folder, filetypes=[("PDF files", f"*.pdf")])
-        compile_to_pdf(source, destination)     
+        compile_central.compile_to_pdf(source, destination)     
+
+    def compile_folder_to_avi():
+        source = askdirectory(title="Select Image Folder")
+        if not source:
+            return
+        destination = asksaveasfilename(title="Video File Name", filetypes=[("Video Files", f"*.avi")])
+        compile_central.compile_to_video(source, destination)
+
+    def compile_folder_to_gif():
+        source = askdirectory(title="Select Image Folder")
+        if not source:
+            return
+        destination = asksaveasfilename(title="Jiff File Name", filetypes=[("Gif", f"*.gif")])
+        compile_central.compile_to_gif(source, destination)
 
     zone_label = get_zone_header(frame, title="File Operations")
     zone_label.grid(row=0, column=0, columnspan=4, padx=PADDING, pady=PADDING, sticky="we")
@@ -311,7 +270,7 @@ def file_zone(frame):
         create_exe_button = settings.button(
             frame,
             text="Create Executable",
-            command=create_exe,
+            command=compile_central.create_exe,
             width=1,
         )
         create_exe_button.grid(row=1, column=1, sticky="ew", padx=PADDING, pady=PADDING)
@@ -332,6 +291,23 @@ def file_zone(frame):
     )
     compile_pdf_button.grid(row=1, column=3, sticky="ew", padx=PADDING, pady=PADDING) 
 
+    compile_video_button = settings.button(
+        frame,
+        text="Create .avi from Folder",
+        command=compile_folder_to_avi,
+        width=1,
+    )
+    compile_video_button.grid(row=2, column=0, sticky="ew", padx=PADDING, pady=PADDING) 
+
+    compile_gif_button = settings.button(
+        frame,
+        text="Create .gif from Folder",
+        command=compile_folder_to_gif,
+        width=1,
+    )
+    compile_gif_button.grid(row=2, column=1, sticky="ew", padx=PADDING, pady=PADDING) 
+
+
     warning_label = settings.label(
         frame,
         text="⌛ In Progress ⏳",
@@ -339,7 +315,7 @@ def file_zone(frame):
         background=WARNING_COLOR,
         font=HEADER_FONT,
     )
-    warning_label.grid(row=1, column=0, columnspan=4, sticky="ew")
+    warning_label.grid(row=1, column=0, columnspan=4, rowspan=2, sticky="ew")
     warning_label.grid_remove()
 
 
