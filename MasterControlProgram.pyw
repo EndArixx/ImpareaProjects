@@ -204,7 +204,8 @@ def collect_episodes_zone(frame):
 
 def file_zone(frame):
     frame.grid_rowconfigure(0, weight=0)
-    for i in range(4):
+    colcount = 3
+    for i in range(colcount):
         frame.grid_columnconfigure(index=i, weight=1)
     hasExeButt = not getattr(sys, "frozen", False) and settings.in_debug_Mode
 
@@ -262,7 +263,7 @@ def file_zone(frame):
         compile_central.compile_to_gif(source, destination)
 
     zone_label = get_zone_header(frame, title="File Operations")
-    zone_label.grid(row=0, column=0, columnspan=4, padx=PADDING, pady=PADDING, sticky="we")
+    zone_label.grid(row=0, column=0, columnspan=colcount, padx=PADDING, pady=PADDING, sticky="we")
 
     open_comic_button = settings.button(
         frame,
@@ -272,22 +273,14 @@ def file_zone(frame):
     )
     open_comic_button.grid(row=1, column=0, sticky="ew", padx=PADDING, pady=PADDING)
 
-    if hasExeButt:
-        create_exe_button = settings.button(
-            frame,
-            text="Create Executable",
-            command=compile_central.create_exe,
-            width=1,
-        )
-        create_exe_button.grid(row=1, column=1, sticky="ew", padx=PADDING, pady=PADDING)
-    
+   
     compile_comic_button = settings.button(
         frame,
         text=f"Create: {settings.get_comic_name()}.pdf",
         command=compile_comic_to_pdf,
         width=1
     )
-    compile_comic_button.grid(row=1, column=2, sticky="ew", padx=PADDING, pady=PADDING) 
+    compile_comic_button.grid(row=1, column=1, sticky="ew", padx=PADDING, pady=PADDING) 
     
     compile_pdf_button = settings.button(
         frame,
@@ -295,7 +288,7 @@ def file_zone(frame):
         command=compile_folder_to_pdf,
         width=1,
     )
-    compile_pdf_button.grid(row=1, column=3, sticky="ew", padx=PADDING, pady=PADDING) 
+    compile_pdf_button.grid(row=1, column=2, sticky="ew", padx=PADDING, pady=PADDING) 
 
     compile_video_button = settings.button(
         frame,
@@ -313,6 +306,15 @@ def file_zone(frame):
     )
     compile_gif_button.grid(row=2, column=1, sticky="ew", padx=PADDING, pady=PADDING) 
 
+    if hasExeButt:
+        create_exe_button = settings.button(
+            frame,
+            text="Create Executable",
+            command=compile_central.create_exe,
+            width=1,
+        )
+        create_exe_button.grid(row=2, column=2, sticky="ew", padx=PADDING, pady=PADDING)
+    
 
     warning_label = settings.label(
         frame,
@@ -321,7 +323,7 @@ def file_zone(frame):
         background=WARNING_COLOR,
         font=HEADER_FONT,
     )
-    warning_label.grid(row=1, column=0, columnspan=4, rowspan=2, sticky="ew")
+    warning_label.grid(row=1, column=0, columnspan=colcount, rowspan=2, sticky="news")
     warning_label.grid_remove()
 
 
