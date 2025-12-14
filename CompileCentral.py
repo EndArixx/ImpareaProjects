@@ -3,11 +3,11 @@ from io import BytesIO
 import os
 import threading
 from tkinter.filedialog import askdirectory, asksaveasfilename
-import PyInstaller
 import cv2
 from PIL import Image
 import utilities.tools as tools
 import tkinter as tk
+import PyInstaller.__main__
 
 class CompileCentral():
     def __init__(self, lock_start, lock_end, settings= None):

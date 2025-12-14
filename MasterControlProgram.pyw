@@ -211,13 +211,19 @@ def file_zone(frame):
     def disable_all():
         warning_label.grid()
         open_comic_button["state"] = "disable"
+        compile_comic_button["state"] = "disable"
         compile_pdf_button["state"] = "disable"
+        compile_video_button["state"] = "disable"
+        compile_gif_button["state"] = "disable"
         if hasExeButt: create_exe_button["state"] = "disable"
 
     def enable_all():
         warning_label.grid_remove()
         open_comic_button["state"] = "normal"
+        compile_comic_button["state"] = "normal"
         compile_pdf_button["state"] = "normal"
+        compile_video_button["state"] = "normal"
+        compile_gif_button["state"] = "normal"
         if hasExeButt: create_exe_button["state"] = "normal"
 
     compile_central = CompileCentral(disable_all, enable_all, settings)
