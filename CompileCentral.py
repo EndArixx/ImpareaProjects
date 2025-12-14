@@ -19,7 +19,7 @@ class CompileCentral():
     def compile_to_video(self, source, destination):
         if not source or not destination:
             self.lock_end()
-            self.settings.print_debug("compile_image_to_video cancelled")
+            self.settings.print_debug("compile_to_video cancelled")
             return
 
         def run_thread(src, dest):
