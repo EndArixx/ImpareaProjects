@@ -9,6 +9,13 @@ import utilities.tools as tools
 import tkinter as tk
 import PyInstaller.__main__
 
+
+vid_formats = {
+    ".avi": "DIVX",
+    ".mp4": "MP4V",
+}
+
+
 class CompileCentral():
     def __init__(self, lock_start, lock_end, settings= None):
         if settings == None:
@@ -16,16 +23,17 @@ class CompileCentral():
         self.settings = settings
         self.lock_start = lock_start
         self.lock_end = lock_end
-    def compile_to_video(self, source, destination):
-        if not source or not destination:
+    def compile_to_video(self, source, destination, type =".avi"):
+    
+        if not source or not destination or type not in vid_formats:
             self.lock_end()
             self.settings.print_debug("compile_to_video cancelled")
             return
 
         def run_thread(src, dest):
             images = [img for img in os.listdir(src) if img.endswith((".jpg", ".jpeg", ".png"))]
-            if os.path.splitext(dest)[1] != ".avi":
-                    dest = dest + ".avi"
+            if os.path.splitext(dest)[1] != type:
+                    dest = dest + type
             self.settings.print_debug(f"Images:{images}")
 
             first = os.path.join(src, images[0])
@@ -34,7 +42,7 @@ class CompileCentral():
             height, width, layers = frame.shape
 
             # Video writer to create .avi file
-            video = cv2.VideoWriter(dest, cv2.VideoWriter_fourcc(*'DIVX'), 30, (width, height))
+            video = cv2.VideoWriter(dest, cv2.VideoWriter_fourcc(*vid_formats[type]), 30, (width, height))
 
             # Appending images to video
             for img in images:
