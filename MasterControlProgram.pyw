@@ -214,8 +214,7 @@ def file_zone(frame):
         open_comic_button["state"] = "disable"
         compile_comic_button["state"] = "disable"
         compile_pdf_button["state"] = "disable"
-        compile_video_avi_button["state"] = "disable"
-        compile_video_mp4_button["state"]= "disable"
+        compile_video_mp4_button["state"] = "disable"
         compile_gif_button["state"] = "disable"
         if hasExeButt: create_exe_button["state"] = "disable"
 
@@ -224,8 +223,7 @@ def file_zone(frame):
         open_comic_button["state"] = "normal"
         compile_comic_button["state"] = "normal"
         compile_pdf_button["state"] = "normal"
-        compile_video_avi_button["state"] = "normal"
-        compile_video_mp4_button["state"]= "normal"
+        compile_video_mp4_button["state"] = "normal"
         compile_gif_button["state"] = "normal"
         if hasExeButt: create_exe_button["state"] = "normal"
 
@@ -250,19 +248,12 @@ def file_zone(frame):
         destination = asksaveasfilename(title="PDF Name",initialdir=pdf_folder, filetypes=[("PDF files", f"*.pdf")])
         compile_central.compile_to_pdf(source, destination)     
 
-    def compile_folder_to_avi():
-        source = askdirectory(title="Select Image Folder")
-        if not source:
-            return
-        destination = asksaveasfilename(title="Video File Name", filetypes=[("Video Files", f"*.avi")])
-        compile_central.compile_to_video(source, destination)
-
     def compile_folder_to_mp4():
         source = askdirectory(title="Select Image Folder")
         if not source:
             return
         destination = asksaveasfilename(title="Video File Name", filetypes=[("Video Files", f"*.mp4")])
-        compile_central.compile_to_video(source, destination,".mp4")
+        compile_central.compile_to_video(source, destination)
 
     def compile_folder_to_gif():
         source = askdirectory(title="Select Image Folder")
@@ -299,21 +290,13 @@ def file_zone(frame):
     )
     compile_pdf_button.grid(row=1, column=2, sticky="ew", padx=PADDING, pady=PADDING) 
 
-    compile_video_avi_button = settings.button(
-        frame,
-        text="Create .avi from Folder",
-        command=compile_folder_to_avi,
-        width=1,
-    )
-    compile_video_avi_button.grid(row=2, column=0, sticky="ew", padx=PADDING, pady=PADDING) 
-
     compile_video_mp4_button = settings.button(
-        frame, 
+        frame,
         text="Create .mp4 from Folder",
         command=compile_folder_to_mp4,
-        width = 1,
+        width=1,
     )
-    compile_video_mp4_button.grid(row=2, column=1, sticky="ew", padx=PADDING, pady=PADDING) 
+    compile_video_mp4_button.grid(row=2, column=0, sticky="ew", padx=PADDING, pady=PADDING) 
 
     compile_gif_button = settings.button(
         frame,
@@ -321,7 +304,7 @@ def file_zone(frame):
         command=compile_folder_to_gif,
         width=1,
     )
-    compile_gif_button.grid(row=2, column=2, sticky="ew", padx=PADDING, pady=PADDING) 
+    compile_gif_button.grid(row=2, column=1, sticky="ew", padx=PADDING, pady=PADDING) 
 
     if hasExeButt:
         create_exe_button = settings.button(
