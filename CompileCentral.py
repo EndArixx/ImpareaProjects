@@ -35,9 +35,10 @@ class CompileCentral():
             # Set frame from the first image
             frame = cv2.imread(first)
             height, width, layers = frame.shape
-
             # Video writer to create .avi file
-            video = cv2.VideoWriter(dest, cv2.VideoWriter_fourcc(*"mp4v"), 30, (width, height))
+
+            fourcc = cv2.VideoWriter_fourcc(*'h264')
+            video = cv2.VideoWriter(dest, fourcc, 30, (width, height))
 
             # Appending images to video
             for img in images:
